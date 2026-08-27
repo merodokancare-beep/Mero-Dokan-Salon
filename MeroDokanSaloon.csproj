@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- ================= ORIGINAL .NET 8 CONFIGURATION (commented for Windows 7 SP1 support) =================
+       To go back to .NET 8: delete the ACTIVE net48 PropertyGroup below, then remove these
+       comment markers and everything will work exactly as before.
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>disable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>MeroDokanSaloon</AssemblyName>
+    <RootNamespace>MeroDokan</RootNamespace>
+    <ApplicationIcon>app_icon.ico</ApplicationIcon>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <PublishTrimmed>false</PublishTrimmed>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="app_icon.ico" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
+    <PackageReference Include="QRCoder" Version="1.6.0" />
+  </ItemGroup>
+  ================= END OF ORIGINAL .NET 8 CONFIGURATION ================= -->
+
+  <!-- ============ ACTIVE CONFIGURATION FOR WINDOWS 7 ULTIMATE SP1 (64-bit, i5-2500S) ============
+       Windows 7 SP1 supports at most .NET Framework 4.8 (.NET 8 is NOT supported on Win7).
+       Install on the target machine:
+         1. .NET Framework 4.8 offline installer   https://dotnet.microsoft.com/download/dotnet-framework/net48
+         2. SQL Server 2014 Express LocalDB        (the newest LocalDB that runs on Win7 SP1)
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <Nullable>disable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>MeroDokanSaloon</AssemblyName>
+    <RootNamespace>MeroDokan</RootNamespace>
+    <ApplicationIcon>app_icon.ico</ApplicationIcon>
+    <LangVersion>7.3</LangVersion>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+  </PropertyGroup>
+
+  <!-- Allows building on machines without the VS ".NET desktop development" workload -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
+  </ItemGroup>
+
+  <!-- Both packages support .NET Framework 4.8 - no version change needed.
+       When reverting to .NET 8, move these back into the original block above. -->
+  <ItemGroup>
+    <None Include="app_icon.ico" CopyToOutputDirectory="PreserveNewest" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
+    <PackageReference Include="QRCoder" Version="1.6.0" />
+    <!-- WINDOWS 7 CHANGE: SalesBillingControl.cs uses Microsoft.VisualBasic.Interaction.InputBox.
+         .NET 8 auto-includes this; on .NET Framework it must be referenced explicitly.
+         (Remove this ItemGroup when reverting to .NET 8.) -->
+    <Reference Include="Microsoft.VisualBasic" />
+  </ItemGroup>
+
+</Project>

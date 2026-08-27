@@ -1,0 +1,14 @@
+D:\Bhawani Works\Project All\MeroDokanSaloon\bin\Release\net48\app_icon.ico
+D:\Bhawani Works\Project All\MeroDokanSaloon\bin\Release\net48\MeroDokanSaloon.exe.config
+D:\Bhawani Works\Project All\MeroDokanSaloon\bin\Release\net48\MeroDokanSaloon.exe
+D:\Bhawani Works\Project All\MeroDokanSaloon\bin\Release\net48\MeroDokanSaloon.pdb
+D:\Bhawani Works\Project All\MeroDokanSaloon\bin\Release\net48\QRCoder.dll
+D:\Bhawani Works\Project All\MeroDokanSaloon\bin\Release\net48\System.Data.SqlClient.dll
+D:\Bhawani Works\Project All\MeroDokanSaloon\obj\Release\net48\MeroDokanSaloon.csproj.AssemblyReference.cache
+D:\Bhawani Works\Project All\MeroDokanSaloon\obj\Release\net48\MeroDokanSaloon.GeneratedMSBuildEditorConfig.editorconfig
+D:\Bhawani Works\Project All\MeroDokanSaloon\obj\Release\net48\MeroDokanSaloon.AssemblyInfoInputs.cache
+D:\Bhawani Works\Project All\MeroDokanSaloon\obj\Release\net48\MeroDokanSaloon.AssemblyInfo.cs
+D:\Bhawani Works\Project All\MeroDokanSaloon\obj\Release\net48\MeroDokanSaloon.csproj.CoreCompileInputs.cache
+D:\Bhawani Works\Project All\MeroDokanSaloon\obj\Release\net48\MeroDoka.60C02CF1.Up2Date
+D:\Bhawani Works\Project All\MeroDokanSaloon\obj\Release\net48\MeroDokanSaloon.exe
+D:\Bhawani Works\Project All\MeroDokanSaloon\obj\Release\net48\MeroDokanSaloon.pdb

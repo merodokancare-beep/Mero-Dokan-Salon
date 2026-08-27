@@ -1,0 +1,8 @@
+Server=(localdb)\MSSQLLocalDB
+Database=MeroDokanDB
+IntegratedSecurity=True
+Username=
+Password=
+ConnectionTimeout=30
+ConnectRetryCount=3
+ConnectRetryInterval=10

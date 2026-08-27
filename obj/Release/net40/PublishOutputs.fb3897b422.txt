@@ -1,0 +1,4 @@
+D:\Bhawani Works\Project All\MeroDokan\bin\Release\net40\publish\MeroDokan.exe
+D:\Bhawani Works\Project All\MeroDokan\bin\Release\net40\publish\MeroDokan.exe.config
+D:\Bhawani Works\Project All\MeroDokan\bin\Release\net40\publish\MeroDokan.pdb
+D:\Bhawani Works\Project All\MeroDokan\bin\Release\net40\publish\QRCoder.dll

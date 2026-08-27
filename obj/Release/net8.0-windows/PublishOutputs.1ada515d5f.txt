@@ -1,0 +1,12 @@
+d:\Bhawani Works\Project All\MeroDokanSaloon\publish\MeroDokanSaloon.exe
+d:\Bhawani Works\Project All\MeroDokanSaloon\publish\MeroDokanSaloon.dll
+d:\Bhawani Works\Project All\MeroDokanSaloon\publish\MeroDokanSaloon.deps.json
+d:\Bhawani Works\Project All\MeroDokanSaloon\publish\MeroDokanSaloon.runtimeconfig.json
+d:\Bhawani Works\Project All\MeroDokanSaloon\publish\MeroDokanSaloon.pdb
+d:\Bhawani Works\Project All\MeroDokanSaloon\publish\QRCoder.dll
+d:\Bhawani Works\Project All\MeroDokanSaloon\publish\System.Data.SqlClient.dll
+d:\Bhawani Works\Project All\MeroDokanSaloon\publish\runtimes\win-arm64\native\sni.dll
+d:\Bhawani Works\Project All\MeroDokanSaloon\publish\runtimes\win-x64\native\sni.dll
+d:\Bhawani Works\Project All\MeroDokanSaloon\publish\runtimes\win-x86\native\sni.dll
+d:\Bhawani Works\Project All\MeroDokanSaloon\publish\runtimes\unix\lib\netcoreapp2.1\System.Data.SqlClient.dll
+d:\Bhawani Works\Project All\MeroDokanSaloon\publish\runtimes\win\lib\netcoreapp2.1\System.Data.SqlClient.dll

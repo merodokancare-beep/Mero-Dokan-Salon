@@ -1,0 +1,13 @@
+D:\Bhawani Works\Project All\MeroDokan\bin\Release\net40\MeroDokan.exe.config
+D:\Bhawani Works\Project All\MeroDokan\bin\Release\net40\MeroDokan.exe
+D:\Bhawani Works\Project All\MeroDokan\bin\Release\net40\MeroDokan.pdb
+D:\Bhawani Works\Project All\MeroDokan\bin\Release\net40\QRCoder.dll
+D:\Bhawani Works\Project All\MeroDokan\obj\Release\net40\MeroDokan.csproj.AssemblyReference.cache
+D:\Bhawani Works\Project All\MeroDokan\obj\Release\net40\MeroDokan.GeneratedMSBuildEditorConfig.editorconfig
+D:\Bhawani Works\Project All\MeroDokan\obj\Release\net40\MeroDokan.AssemblyInfoInputs.cache
+D:\Bhawani Works\Project All\MeroDokan\obj\Release\net40\MeroDokan.AssemblyInfo.cs
+D:\Bhawani Works\Project All\MeroDokan\obj\Release\net40\MeroDokan.csproj.CoreCompileInputs.cache
+D:\Bhawani Works\Project All\MeroDokan\obj\Release\net40\MeroDokan.sourcelink.json
+D:\Bhawani Works\Project All\MeroDokan\obj\Release\net40\MeroDokan.csproj.Up2Date
+D:\Bhawani Works\Project All\MeroDokan\obj\Release\net40\MeroDokan.exe
+D:\Bhawani Works\Project All\MeroDokan\obj\Release\net40\MeroDokan.pdb
