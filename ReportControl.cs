@@ -820,49 +820,181 @@ namespace MeroDokan
                 using (SqlConnection conn = new SqlConnection(DatabaseHelper.ConnectionString))
                 {
                     conn.Open();
-                    string query = @"
-                        SELECT s.InvoiceNumber as [Invoice No], s.SaleDate as [Sale Date], ISNULL(c.Name, 'Walk-in Client') as [Customer],
-                                s.SubTotal as [SubTotal], s.Discount as [Discount], s.Tax as [Tax], 
-                                s.GrandTotal as [Grand Total], 
+                    string query;
+                    if (comboSalesTypeFilter != null && comboSalesTypeFilter.SelectedIndex == 1) // Service Sale
+                    {
+                        query = @"
+                            WITH FilteredDetails AS (
+                                SELECT 
+                                    sd.SaleId,
+                                    SUM(sd.Total) AS ItemSubTotal,
+                                    SUM(ISNULL(ROUND(sd.Total * (ISNULL(s.Discount, 0.0) / NULLIF(s.SubTotal, 0.0)), 2), 0.00)) AS ItemDiscount,
+                                    SUM(ISNULL(sd.CGSTAmount, 0.0) + ISNULL(sd.SGSTAmount, 0.0) + ISNULL(sd.IGSTAmount, 0.0)) AS ItemTax
+                                FROM SaleDetails sd
+                                INNER JOIN Sales s ON sd.SaleId = s.Id
+                                WHERE sd.ItemType = 'Service'
+                                GROUP BY sd.SaleId
+                            )
+                            SELECT 
+                                s.InvoiceNumber as [Invoice No], 
+                                s.SaleDate as [Sale Date], 
+                                ISNULL(c.Name, 'Walk-in Client') as [Customer],
+                                fd.ItemSubTotal as [SubTotal], 
+                                fd.ItemDiscount as [Discount], 
+                                fd.ItemTax as [Tax], 
+                                (fd.ItemSubTotal - fd.ItemDiscount + fd.ItemTax) as [Grand Total], 
                                 CASE 
-                                    WHEN (s.AmountPaid + ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) > s.GrandTotal 
-                                    THEN s.GrandTotal 
-                                    ELSE (s.AmountPaid + ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) 
+                                    WHEN s.GrandTotal > 0 
+                                    THEN ROUND((CASE 
+                                            WHEN (s.AmountPaid + ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) > s.GrandTotal 
+                                            THEN s.GrandTotal 
+                                            ELSE (s.AmountPaid + ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) 
+                                        END) * ((fd.ItemSubTotal - fd.ItemDiscount + fd.ItemTax) / s.GrandTotal), 2)
+                                    ELSE 0.00
                                 END as [Amount Paid], 
                                 CASE 
-                                    WHEN s.PaymentMethod = 'Cash' THEN s.AmountPaid
-                                    WHEN s.PaymentMethod = 'Split' THEN ISNULL(s.CashAmount, 0)
+                                    WHEN s.GrandTotal > 0 
+                                    THEN ROUND((CASE 
+                                            WHEN s.PaymentMethod = 'Cash' THEN s.AmountPaid
+                                            WHEN s.PaymentMethod = 'Split' THEN ISNULL(s.CashAmount, 0)
+                                            ELSE 0.00
+                                        END) * ((fd.ItemSubTotal - fd.ItemDiscount + fd.ItemTax) / s.GrandTotal), 2)
                                     ELSE 0.00
                                 END as [Cash Paid],
                                 CASE 
-                                    WHEN s.PaymentMethod IN ('Card', 'QR Pay', 'UPI', 'Wallet', 'Online', 'QR Pay / UPI') THEN s.AmountPaid
-                                    WHEN s.PaymentMethod = 'Split' THEN ISNULL(s.OnlineAmount, 0)
+                                    WHEN s.GrandTotal > 0 
+                                    THEN ROUND((CASE 
+                                            WHEN s.PaymentMethod IN ('Card', 'QR Pay', 'UPI', 'Wallet', 'Online', 'QR Pay / UPI') THEN s.AmountPaid
+                                            WHEN s.PaymentMethod = 'Split' THEN ISNULL(s.OnlineAmount, 0)
+                                            ELSE 0.00
+                                        END) * ((fd.ItemSubTotal - fd.ItemDiscount + fd.ItemTax) / s.GrandTotal), 2)
                                     ELSE 0.00
                                 END as [Online Paid],
                                 CASE 
-                                    WHEN (s.DueAmount - ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) < 0 
-                                    THEN 0.00 
-                                    ELSE (s.DueAmount - ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) 
+                                    WHEN s.GrandTotal > 0 
+                                    THEN ROUND((CASE 
+                                            WHEN (s.DueAmount - ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) < 0 
+                                            THEN 0.00 
+                                            ELSE (s.DueAmount - ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) 
+                                        END) * ((fd.ItemSubTotal - fd.ItemDiscount + fd.ItemTax) / s.GrandTotal), 2)
+                                    ELSE 0.00
                                 END as [Due Amount], 
                                 CASE
                                     WHEN s.PaymentMethod = 'Split' THEN ('Split (Cash: ' + CAST(CAST(ISNULL(s.CashAmount, 0) AS INT) AS VARCHAR) + ' | Online: ' + CAST(CAST(ISNULL(s.OnlineAmount, 0) AS INT) AS VARCHAR) + ')')
                                     ELSE s.PaymentMethod
                                 END as [Pay Mode]
-                        FROM Sales s
-                        LEFT JOIN Customers c ON s.CustomerId = c.Id
-                        WHERE CAST(s.SaleDate as DATE) BETWEEN @from AND @to
-                          AND (ISNULL(c.Name, '') LIKE @search OR s.InvoiceNumber LIKE @search)";
-
-                    if (comboSalesTypeFilter != null && comboSalesTypeFilter.SelectedIndex == 1) // Service Sale
-                    {
-                        query += " AND EXISTS (SELECT 1 FROM SaleDetails sd WHERE sd.SaleId = s.Id AND sd.ItemType = 'Service')";
+                            FROM FilteredDetails fd
+                            INNER JOIN Sales s ON fd.SaleId = s.Id
+                            LEFT JOIN Customers c ON s.CustomerId = c.Id
+                            WHERE CAST(s.SaleDate as DATE) BETWEEN @from AND @to
+                              AND (ISNULL(c.Name, '') LIKE @search OR s.InvoiceNumber LIKE @search)
+                            ORDER BY s.SaleDate DESC";
                     }
                     else if (comboSalesTypeFilter != null && comboSalesTypeFilter.SelectedIndex == 2) // Product Sale
                     {
-                        query += " AND EXISTS (SELECT 1 FROM SaleDetails sd WHERE sd.SaleId = s.Id AND (sd.ItemType = 'Product' OR sd.ItemType IS NULL OR sd.ItemType = ''))";
+                        query = @"
+                            WITH FilteredDetails AS (
+                                SELECT 
+                                    sd.SaleId,
+                                    SUM(sd.Total) AS ItemSubTotal,
+                                    SUM(ISNULL(ROUND(sd.Total * (ISNULL(s.Discount, 0.0) / NULLIF(s.SubTotal, 0.0)), 2), 0.00)) AS ItemDiscount,
+                                    SUM(ISNULL(sd.CGSTAmount, 0.0) + ISNULL(sd.SGSTAmount, 0.0) + ISNULL(sd.IGSTAmount, 0.0)) AS ItemTax
+                                FROM SaleDetails sd
+                                INNER JOIN Sales s ON sd.SaleId = s.Id
+                                WHERE (sd.ItemType = 'Product' OR sd.ItemType IS NULL OR sd.ItemType = '')
+                                GROUP BY sd.SaleId
+                            )
+                            SELECT 
+                                s.InvoiceNumber as [Invoice No], 
+                                s.SaleDate as [Sale Date], 
+                                ISNULL(c.Name, 'Walk-in Client') as [Customer],
+                                fd.ItemSubTotal as [SubTotal], 
+                                fd.ItemDiscount as [Discount], 
+                                fd.ItemTax as [Tax], 
+                                (fd.ItemSubTotal - fd.ItemDiscount + fd.ItemTax) as [Grand Total], 
+                                CASE 
+                                    WHEN s.GrandTotal > 0 
+                                    THEN ROUND((CASE 
+                                            WHEN (s.AmountPaid + ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) > s.GrandTotal 
+                                            THEN s.GrandTotal 
+                                            ELSE (s.AmountPaid + ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) 
+                                        END) * ((fd.ItemSubTotal - fd.ItemDiscount + fd.ItemTax) / s.GrandTotal), 2)
+                                    ELSE 0.00
+                                END as [Amount Paid], 
+                                CASE 
+                                    WHEN s.GrandTotal > 0 
+                                    THEN ROUND((CASE 
+                                            WHEN s.PaymentMethod = 'Cash' THEN s.AmountPaid
+                                            WHEN s.PaymentMethod = 'Split' THEN ISNULL(s.CashAmount, 0)
+                                            ELSE 0.00
+                                        END) * ((fd.ItemSubTotal - fd.ItemDiscount + fd.ItemTax) / s.GrandTotal), 2)
+                                    ELSE 0.00
+                                END as [Cash Paid],
+                                CASE 
+                                    WHEN s.GrandTotal > 0 
+                                    THEN ROUND((CASE 
+                                            WHEN s.PaymentMethod IN ('Card', 'QR Pay', 'UPI', 'Wallet', 'Online', 'QR Pay / UPI') THEN s.AmountPaid
+                                            WHEN s.PaymentMethod = 'Split' THEN ISNULL(s.OnlineAmount, 0)
+                                            ELSE 0.00
+                                        END) * ((fd.ItemSubTotal - fd.ItemDiscount + fd.ItemTax) / s.GrandTotal), 2)
+                                    ELSE 0.00
+                                END as [Online Paid],
+                                CASE 
+                                    WHEN s.GrandTotal > 0 
+                                    THEN ROUND((CASE 
+                                            WHEN (s.DueAmount - ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) < 0 
+                                            THEN 0.00 
+                                            ELSE (s.DueAmount - ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) 
+                                        END) * ((fd.ItemSubTotal - fd.ItemDiscount + fd.ItemTax) / s.GrandTotal), 2)
+                                    ELSE 0.00
+                                END as [Due Amount], 
+                                CASE
+                                    WHEN s.PaymentMethod = 'Split' THEN ('Split (Cash: ' + CAST(CAST(ISNULL(s.CashAmount, 0) AS INT) AS VARCHAR) + ' | Online: ' + CAST(CAST(ISNULL(s.OnlineAmount, 0) AS INT) AS VARCHAR) + ')')
+                                    ELSE s.PaymentMethod
+                                END as [Pay Mode]
+                            FROM FilteredDetails fd
+                            INNER JOIN Sales s ON fd.SaleId = s.Id
+                            LEFT JOIN Customers c ON s.CustomerId = c.Id
+                            WHERE CAST(s.SaleDate as DATE) BETWEEN @from AND @to
+                              AND (ISNULL(c.Name, '') LIKE @search OR s.InvoiceNumber LIKE @search)
+                            ORDER BY s.SaleDate DESC";
                     }
-
-                    query += " ORDER BY s.SaleDate DESC";
+                    else
+                    {
+                        query = @"
+                            SELECT s.InvoiceNumber as [Invoice No], s.SaleDate as [Sale Date], ISNULL(c.Name, 'Walk-in Client') as [Customer],
+                                    s.SubTotal as [SubTotal], s.Discount as [Discount], s.Tax as [Tax], 
+                                    s.GrandTotal as [Grand Total], 
+                                    CASE 
+                                        WHEN (s.AmountPaid + ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) > s.GrandTotal 
+                                        THEN s.GrandTotal 
+                                        ELSE (s.AmountPaid + ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) 
+                                    END as [Amount Paid], 
+                                    CASE 
+                                        WHEN s.PaymentMethod = 'Cash' THEN s.AmountPaid
+                                        WHEN s.PaymentMethod = 'Split' THEN ISNULL(s.CashAmount, 0)
+                                        ELSE 0.00
+                                    END as [Cash Paid],
+                                    CASE 
+                                        WHEN s.PaymentMethod IN ('Card', 'QR Pay', 'UPI', 'Wallet', 'Online', 'QR Pay / UPI') THEN s.AmountPaid
+                                        WHEN s.PaymentMethod = 'Split' THEN ISNULL(s.OnlineAmount, 0)
+                                        ELSE 0.00
+                                    END as [Online Paid],
+                                    CASE 
+                                        WHEN (s.DueAmount - ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) < 0 
+                                        THEN 0.00 
+                                        ELSE (s.DueAmount - ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) 
+                                    END as [Due Amount], 
+                                    CASE
+                                        WHEN s.PaymentMethod = 'Split' THEN ('Split (Cash: ' + CAST(CAST(ISNULL(s.CashAmount, 0) AS INT) AS VARCHAR) + ' | Online: ' + CAST(CAST(ISNULL(s.OnlineAmount, 0) AS INT) AS VARCHAR) + ')')
+                                        ELSE s.PaymentMethod
+                                    END as [Pay Mode]
+                            FROM Sales s
+                            LEFT JOIN Customers c ON s.CustomerId = c.Id
+                            WHERE CAST(s.SaleDate as DATE) BETWEEN @from AND @to
+                              AND (ISNULL(c.Name, '') LIKE @search OR s.InvoiceNumber LIKE @search)
+                            ORDER BY s.SaleDate DESC";
+                    }
 
                     string searchVal = (txtSalesSearch != null && !string.IsNullOrWhiteSpace(txtSalesSearch.Text)) 
                         ? "%" + txtSalesSearch.Text.Trim() + "%" 
@@ -2597,7 +2729,9 @@ Period: {fromDate:yyyy-MM-dd} to {toDate:yyyy-MM-dd}
                             st.Name AS [Name of Stylist],
                             st.Role AS [Role],
                             COUNT(sd.Id) AS [No of Job],
-                            SUM(sd.Total) AS [Total Amount (Rs.)]
+                            SUM(sd.Total) AS [Gross Amount (Rs.)],
+                            SUM(ISNULL(ROUND(sd.Total * (ISNULL(s.Discount, 0.0) / NULLIF(s.SubTotal, 0.0)), 2), 0.00)) AS [Discount (Rs.)],
+                            SUM(sd.Total - ISNULL(ROUND(sd.Total * (ISNULL(s.Discount, 0.0) / NULLIF(s.SubTotal, 0.0)), 2), 0.00)) AS [Total Amount (Rs.)]
                         FROM SaleDetails sd
                         INNER JOIN Sales s ON sd.SaleId = s.Id
                         INNER JOIN Staff st ON sd.StaffId = st.Id
@@ -2629,6 +2763,8 @@ Period: {fromDate:yyyy-MM-dd} to {toDate:yyyy-MM-dd}
                             da.Fill(dt);
                             gridStylistJobs.DataSource = dt;
 
+                            if (gridStylistJobs.Columns["Gross Amount (Rs.)"] != null) gridStylistJobs.Columns["Gross Amount (Rs.)"].DefaultCellStyle.Format = "N2";
+                            if (gridStylistJobs.Columns["Discount (Rs.)"] != null) gridStylistJobs.Columns["Discount (Rs.)"].DefaultCellStyle.Format = "N2";
                             if (gridStylistJobs.Columns["Total Amount (Rs.)"] != null) gridStylistJobs.Columns["Total Amount (Rs.)"].DefaultCellStyle.Format = "N2";
 
                             int totalJobs = 0;

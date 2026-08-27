@@ -6,7 +6,7 @@
 #define MyAppPublisher "Mero Dokan Technologies"
 #define MyAppURL "https://merodokan.com"
 #define MyAppExeName "MeroDokanSaloon.exe"
-#define MySourceDir "d:\Bhawani Works\Project All\MeroDokanSaloon\publish"
+#define MySourceDir "d:\Bhawani Works\Project All\MeroDokanSaloon\Mero-Dokan-Salon\publish"
 
 [Setup]
 AppId={{D37E8A21-17B4-4B2E-8E5A-7C1268DA87F9}

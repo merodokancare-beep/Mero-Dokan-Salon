@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MeroDokanSaloon")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6ba6f48c8cc43947bb8b42b39e3318d68a5b65e8")]
 [assembly: System.Reflection.AssemblyProductAttribute("MeroDokanSaloon")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MeroDokanSaloon")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
