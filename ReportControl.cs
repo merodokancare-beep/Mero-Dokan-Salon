@@ -436,7 +436,7 @@ namespace MeroDokan
 
         private void InitializeSalesTab(Panel page)
         {
-            // Filters Bar Panel
+            // Filters Bar Panell
             FlowLayoutPanel filterBar = new FlowLayoutPanel();
             filterBar.Location = new Point(20, 10);
             filterBar.Size = new Size(870, 52);

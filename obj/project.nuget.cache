@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "jYPR2uPpLyw=",
+  "dgSpecHash": "qOqOLsewlSA=",
   "success": true,
-  "projectFilePath": "D:\\Bhawani Works\\Project All\\MeroDokanSaloon\\MeroDokanSaloon.csproj",
+  "projectFilePath": "D:\\Bhawani Works\\Project All\\MeroDokanSaloon\\Mero-Dokan-Salon\\MeroDokanSaloon.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\bbhat\\.nuget\\packages\\microsoft.netframework.referenceassemblies\\1.0.3\\microsoft.netframework.referenceassemblies.1.0.3.nupkg.sha512",
     "C:\\Users\\bbhat\\.nuget\\packages\\microsoft.netframework.referenceassemblies.net48\\1.0.3\\microsoft.netframework.referenceassemblies.net48.1.0.3.nupkg.sha512",

@@ -618,11 +618,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Bhawani Works\\Project All\\MeroDokanSaloon\\MeroDokanSaloon.csproj",
+      "projectUniqueName": "D:\\Bhawani Works\\Project All\\MeroDokanSaloon\\Mero-Dokan-Salon\\MeroDokanSaloon.csproj",
       "projectName": "MeroDokanSaloon",
-      "projectPath": "D:\\Bhawani Works\\Project All\\MeroDokanSaloon\\MeroDokanSaloon.csproj",
+      "projectPath": "D:\\Bhawani Works\\Project All\\MeroDokanSaloon\\Mero-Dokan-Salon\\MeroDokanSaloon.csproj",
       "packagesPath": "C:\\Users\\bbhat\\.nuget\\packages\\",
-      "outputPath": "D:\\Bhawani Works\\Project All\\MeroDokanSaloon\\obj\\",
+      "outputPath": "D:\\Bhawani Works\\Project All\\MeroDokanSaloon\\Mero-Dokan-Salon\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
