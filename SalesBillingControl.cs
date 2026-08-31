@@ -256,6 +256,7 @@ namespace MeroDokan
             customerCard.Dock = DockStyle.Top;
             customerCard.BackColor = Theme.InputBg;
             customerCard.Margin = new Padding(0, 0, 0, 8);
+            customerCard.Cursor = Cursors.Hand;
             customerCard.Paint += (s, e) => {
                 using (Pen p = new Pen(Theme.CardBorder, 1))
                 {
@@ -265,46 +266,82 @@ namespace MeroDokan
 
             Label lblCustAvatar = new Label();
             lblCustAvatar.Text = "👤";
-            lblCustAvatar.Font = new Font("Segoe UI", 16F);
-            lblCustAvatar.Location = new Point(10, 10);
-            lblCustAvatar.Size = new Size(32, 32);
+            lblCustAvatar.Font = new Font("Segoe UI", 15F);
+            lblCustAvatar.Location = new Point(8, 10);
+            lblCustAvatar.Size = new Size(30, 32);
             lblCustAvatar.BackColor = Color.Transparent;
+            lblCustAvatar.Cursor = Cursors.Hand;
             customerCard.Controls.Add(lblCustAvatar);
 
             lblCustomerName = new Label();
             lblCustomerName.Text = "Walk-in Customer";
-            lblCustomerName.Location = new Point(46, 8);
-            lblCustomerName.AutoSize = true;
+            lblCustomerName.Location = new Point(40, 8);
+            lblCustomerName.Size = new Size(190, 20);
+            lblCustomerName.AutoEllipsis = true;
             lblCustomerName.BackColor = Color.Transparent;
+            lblCustomerName.Cursor = Cursors.Hand;
             Theme.StyleLabel(lblCustomerName, Theme.TextWhite, new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold));
             customerCard.Controls.Add(lblCustomerName);
 
             lblCustomerPhone = new Label();
             lblCustomerPhone.Text = "+977-9800000000";
-            lblCustomerPhone.Location = new Point(48, 28);
-            lblCustomerPhone.AutoSize = true;
+            lblCustomerPhone.Location = new Point(42, 28);
+            lblCustomerPhone.Size = new Size(188, 18);
+            lblCustomerPhone.AutoEllipsis = true;
             lblCustomerPhone.BackColor = Color.Transparent;
+            lblCustomerPhone.Cursor = Cursors.Hand;
             Theme.StyleLabel(lblCustomerPhone, Theme.TextMuted, new Font("Segoe UI", 8F));
             customerCard.Controls.Add(lblCustomerPhone);
 
+            FlowLayoutPanel custButtonsPanel = new FlowLayoutPanel();
+            custButtonsPanel.FlowDirection = FlowDirection.RightToLeft;
+            custButtonsPanel.Dock = DockStyle.Right;
+            custButtonsPanel.Width = 120;
+            custButtonsPanel.Height = 54;
+            custButtonsPanel.BackColor = Color.Transparent;
+            custButtonsPanel.Padding = new Padding(0, 11, 8, 0);
+
             Button btnSelectCust = new Button();
-            btnSelectCust.Text = "👥";
+            btnSelectCust.Text = "🔍";
             btnSelectCust.Size = new Size(32, 32);
-            btnSelectCust.Location = new Point(315, 11);
-            btnSelectCust.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            Theme.StyleButton(btnSelectCust, Theme.CardBg, Theme.TextWhite);
-            btnSelectCust.Click += BtnSelectCust_Click;
-            customerCard.Controls.Add(btnSelectCust);
+            btnSelectCust.Margin = new Padding(3, 0, 0, 0);
+            Theme.StylePrimaryButton(btnSelectCust);
+            btnSelectCust.Cursor = Cursors.Hand;
+            btnSelectCust.Click += (s, e) => ShowCustomerSelectDialog();
+            ToolTip tipSelect = new ToolTip();
+            tipSelect.SetToolTip(btnSelectCust, "Choose / Search Registered Customer (F3)");
+            custButtonsPanel.Controls.Add(btnSelectCust);
 
             Button btnAddCust = new Button();
-            btnAddCust.Text = "+";
+            btnAddCust.Text = "➕";
             btnAddCust.Size = new Size(32, 32);
-            btnAddCust.Location = new Point(275, 11);
-            btnAddCust.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            Theme.StyleButton(btnAddCust, Theme.Success, Theme.TextWhite);
-            btnAddCust.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            btnAddCust.Click += BtnAddCust_Click;
-            customerCard.Controls.Add(btnAddCust);
+            btnAddCust.Margin = new Padding(3, 0, 0, 0);
+            Theme.StyleSuccessButton(btnAddCust);
+            btnAddCust.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnAddCust.Cursor = Cursors.Hand;
+            btnAddCust.Click += (s, e) => ShowQuickAddCustomerDialog();
+            ToolTip tipAdd = new ToolTip();
+            tipAdd.SetToolTip(btnAddCust, "Register New Quick Customer");
+            custButtonsPanel.Controls.Add(btnAddCust);
+
+            Button btnResetCust = new Button();
+            btnResetCust.Text = "🚶";
+            btnResetCust.Size = new Size(32, 32);
+            btnResetCust.Margin = new Padding(3, 0, 0, 0);
+            Theme.StyleSecondaryButton(btnResetCust);
+            btnResetCust.Cursor = Cursors.Hand;
+            btnResetCust.Click += (s, e) => SetToWalkInCustomer();
+            ToolTip tipWalkIn = new ToolTip();
+            tipWalkIn.SetToolTip(btnResetCust, "Reset to Walk-in Customer");
+            custButtonsPanel.Controls.Add(btnResetCust);
+
+            customerCard.Controls.Add(custButtonsPanel);
+
+            // Clicking anywhere on customer tile opens customer selector
+            customerCard.Click += (s, e) => ShowCustomerSelectDialog();
+            lblCustAvatar.Click += (s, e) => ShowCustomerSelectDialog();
+            lblCustomerName.Click += (s, e) => ShowCustomerSelectDialog();
+            lblCustomerPhone.Click += (s, e) => ShowCustomerSelectDialog();
 
             rightCartPanel.Controls.Add(customerCard);
 
@@ -347,7 +384,19 @@ namespace MeroDokan
             btnClearCart.ForeColor = Theme.TextWhite;
             btnClearCart.Font = new Font("Segoe UI", 7.5F, FontStyle.Bold);
             btnClearCart.FlatAppearance.BorderSize = 0;
-            btnClearCart.Click += (s, e) => { cartItems.Clear(); splitCashAmount = 0; splitOnlineAmount = 0; UpdateCartUI(); };
+            btnClearCart.Click += (s, e) => {
+                cartItems.Clear();
+                splitCashAmount = 0;
+                splitOnlineAmount = 0;
+                SetToWalkInCustomer();
+                UpdateCartUI();
+                if (txtBarcodeScan != null)
+                {
+                    txtBarcodeScan.Text = "";
+                    txtBarcodeScan.Focus();
+                    txtBarcodeScan.SelectAll();
+                }
+            };
             orderBanner.Controls.Add(btnClearCart);
 
             rightCartPanel.Controls.Add(orderBanner);
@@ -1633,6 +1682,11 @@ namespace MeroDokan
                 txtBarcodeScan?.SelectAll();
                 return true;
             }
+            if (keyData == Keys.F3)
+            {
+                ShowCustomerSelectDialog();
+                return true;
+            }
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
@@ -2631,13 +2685,21 @@ namespace MeroDokan
                                     ThermalReceiptPrinter.Print(lastSaleId);
                                 }
 
-                                // Reset cart and tender state
+                                // Reset cart, tender state, customer, and set focus to barcode scan box
                                 cartItems.Clear();
                                 txtDiscountVal.Text = "0";
                                 splitCashAmount = 0;
                                 splitOnlineAmount = 0;
                                 SelectPaymentMode("Cash", false);
+                                SetToWalkInCustomer();
                                 UpdateCartUI();
+
+                                if (txtBarcodeScan != null)
+                                {
+                                    txtBarcodeScan.Text = "";
+                                    txtBarcodeScan.Focus();
+                                    txtBarcodeScan.SelectAll();
+                                }
                             }
                         }
                         catch
@@ -2868,17 +2930,15 @@ namespace MeroDokan
             splitCashAmount = 0;
             splitOnlineAmount = 0;
             SelectPaymentMode("Cash", false);
+            SetToWalkInCustomer();
             UpdateCartUI();
 
-            try
+            if (txtBarcodeScan != null)
             {
-                using (SqlConnection conn = new SqlConnection(DatabaseHelper.ConnectionString))
-                {
-                    conn.Open();
-                    EnsureWalkInCustomer(conn);
-                }
+                txtBarcodeScan.Text = "";
+                txtBarcodeScan.Focus();
+                txtBarcodeScan.SelectAll();
             }
-            catch { }
         }
 
         private int EnsureWalkInCustomer(SqlConnection conn, SqlTransaction trans = null)
@@ -3033,87 +3093,668 @@ namespace MeroDokan
             }
         }
 
-        private void BtnSelectCust_Click(object sender, EventArgs e)
+        public void ApplySelectedCustomer(CustomerData cust)
         {
-            ContextMenuStrip menu = new ContextMenuStrip();
+            if (cust == null) return;
+            currentCustomerId = cust.Id;
+            currentCustomerName = cust.Name;
+            currentCustomerPhone = !string.IsNullOrWhiteSpace(cust.Phone) ? cust.Phone : "+977-9800000000";
+            currentCustomerGSTIN = cust.GSTIN ?? "";
+            currentCustomerStateName = !string.IsNullOrWhiteSpace(cust.StateName) ? cust.StateName : salonStateName;
+            currentCustomerStateCode = !string.IsNullOrWhiteSpace(cust.StateCode) ? cust.StateCode : salonStateCode;
+
+            if (lblCustomerName != null) lblCustomerName.Text = currentCustomerName;
+            if (lblCustomerPhone != null)
+            {
+                lblCustomerPhone.Text = string.IsNullOrEmpty(currentCustomerGSTIN)
+                    ? currentCustomerPhone
+                    : $"{currentCustomerPhone} • GST: {currentCustomerGSTIN}";
+            }
+
+            RecalculateTotals();
+        }
+
+        public void SetToWalkInCustomer()
+        {
             try
             {
                 using (SqlConnection conn = new SqlConnection(DatabaseHelper.ConnectionString))
                 {
                     conn.Open();
-                    using (SqlCommand cmd = new SqlCommand("SELECT TOP 12 Id, Name, Phone, ISNULL(GSTIN, '') AS GSTIN, ISNULL(StateName, 'Delhi') AS StateName, ISNULL(StateCode, '07') AS StateCode FROM Customers ORDER BY CASE WHEN Name LIKE '%Walk-in%' THEN 0 ELSE 1 END, Name ASC", conn))
+                    using (SqlCommand cmdFind = new SqlCommand("SELECT TOP 1 Id, Name, ISNULL(Phone, '+977-9800000000') AS Phone, ISNULL(GSTIN, '') AS GSTIN, ISNULL(StateName, 'Delhi') AS StateName, ISNULL(StateCode, '07') AS StateCode FROM Customers WHERE Name LIKE '%Walk-in%' OR Phone LIKE '%9800000000%' ORDER BY Id ASC", conn))
                     {
-                        using (SqlDataReader rdr = cmd.ExecuteReader())
+                        using (SqlDataReader rdr = cmdFind.ExecuteReader())
                         {
-                            while (rdr.Read())
+                            if (rdr.Read())
                             {
-                                int id = Convert.ToInt32(rdr["Id"]);
-                                string name = rdr["Name"].ToString();
-                                string phone = rdr["Phone"].ToString();
-                                string gstin = rdr["GSTIN"].ToString();
-                                string stName = rdr["StateName"].ToString();
-                                string stCode = rdr["StateCode"].ToString();
+                                currentCustomerId = Convert.ToInt32(rdr["Id"]);
+                                currentCustomerName = rdr["Name"]?.ToString() ?? "Walk-in Customer";
+                                currentCustomerPhone = rdr["Phone"]?.ToString() ?? "+977-9800000000";
+                                currentCustomerGSTIN = rdr["GSTIN"]?.ToString() ?? "";
+                                currentCustomerStateName = rdr["StateName"]?.ToString() ?? salonStateName;
+                                currentCustomerStateCode = rdr["StateCode"]?.ToString() ?? salonStateCode;
 
-                                string label = string.IsNullOrEmpty(gstin) ? $"{name} ({phone})" : $"{name} • GSTIN: {gstin}";
-                                var item = menu.Items.Add(label);
-                                item.Click += (s, ev) => {
-                                    currentCustomerId = id;
-                                    currentCustomerName = name;
-                                    currentCustomerPhone = phone;
-                                    currentCustomerGSTIN = gstin;
-                                    currentCustomerStateName = stName;
-                                    currentCustomerStateCode = stCode;
-                                    lblCustomerName.Text = name;
-                                    lblCustomerPhone.Text = string.IsNullOrEmpty(gstin) ? phone : $"{phone} | GST: {gstin}";
-                                    RecalculateTotals();
-                                };
+                                if (lblCustomerName != null) lblCustomerName.Text = currentCustomerName;
+                                if (lblCustomerPhone != null) lblCustomerPhone.Text = currentCustomerPhone;
+                                RecalculateTotals();
+                                return;
                             }
+                        }
+                    }
+
+                    // If not found, insert Walk-in Customer
+                    using (SqlCommand cmdIns = new SqlCommand(@"
+                        INSERT INTO Customers (Name, Phone, Email, Address, GSTIN, StateName, StateCode, CreatedAt)
+                        OUTPUT INSERTED.Id
+                        VALUES ('Walk-in Customer', '+977-9800000000', '', '', '', @stName, @stCode, GETDATE())", conn))
+                    {
+                        cmdIns.Parameters.AddWithValue("@stName", salonStateName);
+                        cmdIns.Parameters.AddWithValue("@stCode", salonStateCode);
+                        object newId = cmdIns.ExecuteScalar();
+                        if (newId != null && newId != DBNull.Value)
+                        {
+                            currentCustomerId = Convert.ToInt32(newId);
+                            currentCustomerName = "Walk-in Customer";
+                            currentCustomerPhone = "+977-9800000000";
+                            currentCustomerGSTIN = "";
+                            currentCustomerStateName = salonStateName;
+                            currentCustomerStateCode = salonStateCode;
+
+                            if (lblCustomerName != null) lblCustomerName.Text = currentCustomerName;
+                            if (lblCustomerPhone != null) lblCustomerPhone.Text = currentCustomerPhone;
                         }
                     }
                 }
             }
             catch { }
+            RecalculateTotals();
+        }
 
-            menu.Show(lblCustomerName, new Point(0, lblCustomerName.Height));
+        private void ShowCustomerSelectDialog()
+        {
+            using (CustomerSelectModal dlg = new CustomerSelectModal(salonStateName, salonStateCode))
+            {
+                if (dlg.ShowDialog() == DialogResult.OK && dlg.SelectedCustomer != null)
+                {
+                    ApplySelectedCustomer(dlg.SelectedCustomer);
+                }
+            }
+        }
+
+        private void ShowQuickAddCustomerDialog()
+        {
+            using (QuickAddCustomerModal dlg = new QuickAddCustomerModal(salonStateName, salonStateCode))
+            {
+                if (dlg.ShowDialog() == DialogResult.OK && dlg.CreatedCustomer != null)
+                {
+                    ApplySelectedCustomer(dlg.CreatedCustomer);
+                }
+            }
+        }
+
+        private void BtnSelectCust_Click(object sender, EventArgs e)
+        {
+            ShowCustomerSelectDialog();
         }
 
         private void BtnAddCust_Click(object sender, EventArgs e)
         {
-            string newName = Microsoft.VisualBasic.Interaction.InputBox("Enter Client Name:", "New Quick Client", "New Client");
-            if (string.IsNullOrEmpty(newName)) return;
-            string newPhone = Microsoft.VisualBasic.Interaction.InputBox("Enter Client Phone Number:", "New Client Phone", "+977-98");
+            ShowQuickAddCustomerDialog();
+        }
 
-            try
+        public class CustomerData
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public string Phone { get; set; }
+            public string GSTIN { get; set; }
+            public string StateName { get; set; }
+            public string StateCode { get; set; }
+            public string Address { get; set; }
+            public string Email { get; set; }
+            public decimal DueBalance { get; set; }
+        }
+
+        public class CustomerSelectModal : Form
+        {
+            private string salonStateName;
+            private string salonStateCode;
+            public CustomerData SelectedCustomer { get; private set; }
+
+            private TextBox txtSearch;
+            private DataGridView gridCustomers;
+            private Label lblStatus;
+            private Button btnSelect;
+            private Button btnWalkIn;
+            private Button btnAddNew;
+            private Button btnCancel;
+
+            public CustomerSelectModal(string stateName, string stateCode)
             {
-                using (SqlConnection conn = new SqlConnection(DatabaseHelper.ConnectionString))
-                {
-                    conn.Open();
-                    using (SqlCommand cmd = new SqlCommand(@"
-                        INSERT INTO Customers (Name, Phone, GSTIN, StateName, StateCode, Email, Address) 
-                        OUTPUT INSERTED.Id 
-                        VALUES (@name, @phone, NULL, @stName, @stCode, 'client@saloon.com', 'Local')", conn))
-                    {
-                        cmd.Parameters.AddWithValue("@name", newName);
-                        cmd.Parameters.AddWithValue("@phone", newPhone);
-                        cmd.Parameters.AddWithValue("@stName", salonStateName);
-                        cmd.Parameters.AddWithValue("@stCode", salonStateCode);
-                        int newId = (int)cmd.ExecuteScalar();
+                this.salonStateName = stateName;
+                this.salonStateCode = stateCode;
+                InitializeComponent();
+                LoadCustomers("");
+            }
 
-                        currentCustomerId = newId;
-                        currentCustomerName = newName;
-                        currentCustomerPhone = newPhone;
-                        currentCustomerGSTIN = "";
-                        currentCustomerStateName = salonStateName;
-                        currentCustomerStateCode = salonStateCode;
-                        lblCustomerName.Text = newName;
-                        lblCustomerPhone.Text = newPhone;
-                        RecalculateTotals();
+            private void InitializeComponent()
+            {
+                this.Text = "Choose / Search Customer for Retail Sale";
+                this.ClientSize = new Size(800, 520);
+                this.StartPosition = FormStartPosition.CenterParent;
+                this.FormBorderStyle = FormBorderStyle.FixedDialog;
+                this.MaximizeBox = false;
+                this.MinimizeBox = false;
+                this.BackColor = Theme.Secondary;
+                this.Font = Theme.MainFont;
+                this.ForeColor = Theme.TextLight;
+
+                // Header
+                Panel topPanel = new Panel();
+                topPanel.Dock = DockStyle.Top;
+                topPanel.Height = 100;
+                topPanel.Padding = new Padding(20, 15, 20, 10);
+                topPanel.BackColor = Theme.CardBg;
+
+                Label lblTitle = new Label();
+                lblTitle.Text = "👤 Select Customer for Direct Retail Sale";
+                lblTitle.Location = new Point(20, 12);
+                lblTitle.AutoSize = true;
+                Theme.StyleLabel(lblTitle, Theme.TextWhite, Theme.SubHeaderFont);
+                topPanel.Controls.Add(lblTitle);
+
+                Label lblSub = new Label();
+                lblSub.Text = "Search by Name, Phone Number, GSTIN, or Address • Double click to select";
+                lblSub.Location = new Point(22, 38);
+                lblSub.AutoSize = true;
+                Theme.StyleLabel(lblSub, Theme.TextMuted, new Font("Segoe UI", 8F));
+                topPanel.Controls.Add(lblSub);
+
+                // Search Bar + Quick Buttons
+                txtSearch = new TextBox();
+                txtSearch.Location = new Point(20, 60);
+                txtSearch.Size = new Size(380, 28);
+                txtSearch.Font = new Font("Segoe UI", 10.5F);
+                Theme.StyleTextBox(txtSearch);
+                txtSearch.TextChanged += (s, e) => LoadCustomers(txtSearch.Text.Trim());
+                txtSearch.KeyDown += (s, e) => {
+                    if (e.KeyCode == Keys.Down && gridCustomers.Rows.Count > 0)
+                    {
+                        gridCustomers.Focus();
+                        e.Handled = true;
+                    }
+                    else if (e.KeyCode == Keys.Enter && gridCustomers.SelectedRows.Count > 0)
+                    {
+                        SelectCurrentRow();
+                        e.Handled = true;
+                    }
+                };
+                topPanel.Controls.Add(txtSearch);
+
+                btnWalkIn = new Button();
+                btnWalkIn.Text = "🚶 Walk-in Client";
+                btnWalkIn.Location = new Point(410, 60);
+                btnWalkIn.Size = new Size(160, 30);
+                Theme.StyleSecondaryButton(btnWalkIn);
+                btnWalkIn.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+                btnWalkIn.Click += (s, e) => SelectWalkIn();
+                topPanel.Controls.Add(btnWalkIn);
+
+                btnAddNew = new Button();
+                btnAddNew.Text = "➕ New Client";
+                btnAddNew.Location = new Point(580, 60);
+                btnAddNew.Size = new Size(140, 30);
+                Theme.StyleSuccessButton(btnAddNew);
+                btnAddNew.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+                btnAddNew.Click += (s, e) => OpenQuickAdd();
+                topPanel.Controls.Add(btnAddNew);
+
+                this.Controls.Add(topPanel);
+
+                // Grid
+                gridCustomers = new DataGridView();
+                gridCustomers.Location = new Point(20, 110);
+                gridCustomers.Size = new Size(760, 345);
+                gridCustomers.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+                Theme.StyleGrid(gridCustomers);
+                gridCustomers.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+                gridCustomers.MultiSelect = false;
+                gridCustomers.CellDoubleClick += (s, e) => {
+                    if (e.RowIndex >= 0) SelectCurrentRow();
+                };
+                gridCustomers.KeyDown += (s, e) => {
+                    if (e.KeyCode == Keys.Enter)
+                    {
+                        SelectCurrentRow();
+                        e.Handled = true;
+                    }
+                };
+                this.Controls.Add(gridCustomers);
+
+                // Bottom Panel
+                Panel bottomPanel = new Panel();
+                bottomPanel.Dock = DockStyle.Bottom;
+                bottomPanel.Height = 55;
+                bottomPanel.BackColor = Theme.CardBg;
+                bottomPanel.Padding = new Padding(20, 10, 20, 10);
+
+                lblStatus = new Label();
+                lblStatus.Text = "Loading customers...";
+                lblStatus.Location = new Point(20, 18);
+                lblStatus.AutoSize = true;
+                Theme.StyleLabel(lblStatus, Theme.TextMuted, new Font("Segoe UI", 8.5F));
+                bottomPanel.Controls.Add(lblStatus);
+
+                btnSelect = new Button();
+                btnSelect.Text = "✔ Select Client (Enter)";
+                btnSelect.Location = new Point(480, 10);
+                btnSelect.Size = new Size(180, 35);
+                btnSelect.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+                Theme.StylePrimaryButton(btnSelect);
+                btnSelect.Click += (s, e) => SelectCurrentRow();
+                bottomPanel.Controls.Add(btnSelect);
+
+                btnCancel = new Button();
+                btnCancel.Text = "Cancel";
+                btnCancel.Location = new Point(670, 10);
+                btnCancel.Size = new Size(100, 35);
+                btnCancel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+                Theme.StyleSecondaryButton(btnCancel);
+                btnCancel.Click += (s, e) => { this.DialogResult = DialogResult.Cancel; this.Close(); };
+                bottomPanel.Controls.Add(btnCancel);
+
+                this.Controls.Add(bottomPanel);
+                this.CancelButton = btnCancel;
+
+                this.Shown += (s, e) => {
+                    txtSearch.Focus();
+                };
+            }
+
+            private void LoadCustomers(string filter)
+            {
+                try
+                {
+                    using (SqlConnection conn = new SqlConnection(DatabaseHelper.ConnectionString))
+                    {
+                        conn.Open();
+                        string query = @"
+                            SELECT 
+                                c.Id, 
+                                c.Name AS [Customer Name], 
+                                c.Phone AS [Phone Number], 
+                                ISNULL(c.Address, '') AS [Address],
+                                ISNULL(c.GSTIN, '') AS [GSTIN], 
+                                ISNULL(c.StateName, 'Delhi') AS [State / POS],
+                                ISNULL(c.StateCode, '07') AS [StateCode],
+                                ISNULL(c.Email, '') AS [Email],
+                                CASE 
+                                    WHEN (ISNULL((SELECT SUM(DueAmount) FROM Sales WHERE CustomerId = c.Id), 0) -
+                                          ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE CustomerId = c.Id), 0)) < 0 
+                                    THEN 0.00 
+                                    ELSE (ISNULL((SELECT SUM(DueAmount) FROM Sales WHERE CustomerId = c.Id), 0) -
+                                          ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE CustomerId = c.Id), 0)) 
+                                END AS [Due Balance]
+                            FROM Customers c
+                            WHERE (@search = '' OR c.Name LIKE @searchPattern OR c.Phone LIKE @searchPattern OR c.Address LIKE @searchPattern OR c.GSTIN LIKE @searchPattern)
+                            ORDER BY CASE WHEN c.Name LIKE '%Walk-in%' THEN 0 ELSE 1 END, c.Name ASC";
+
+                        using (SqlCommand cmd = new SqlCommand(query, conn))
+                        {
+                            cmd.Parameters.AddWithValue("@search", filter);
+                            cmd.Parameters.AddWithValue("@searchPattern", "%" + filter + "%");
+
+                            using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                            {
+                                DataTable dt = new DataTable();
+                                da.Fill(dt);
+                                gridCustomers.DataSource = dt;
+
+                                if (gridCustomers.Columns["Id"] != null) gridCustomers.Columns["Id"].Visible = false;
+                                if (gridCustomers.Columns["StateCode"] != null) gridCustomers.Columns["StateCode"].Visible = false;
+                                if (gridCustomers.Columns["Email"] != null) gridCustomers.Columns["Email"].Visible = false;
+
+                                if (gridCustomers.Columns["Due Balance"] != null)
+                                {
+                                    gridCustomers.Columns["Due Balance"].DefaultCellStyle.Format = "N2";
+                                    gridCustomers.Columns["Due Balance"].DefaultCellStyle.ForeColor = Theme.Danger;
+                                }
+
+                                if (gridCustomers.Columns["Customer Name"] != null) gridCustomers.Columns["Customer Name"].FillWeight = 140;
+                                if (gridCustomers.Columns["Phone Number"] != null) gridCustomers.Columns["Phone Number"].FillWeight = 100;
+                                if (gridCustomers.Columns["Address"] != null) gridCustomers.Columns["Address"].FillWeight = 110;
+                                if (gridCustomers.Columns["GSTIN"] != null) gridCustomers.Columns["GSTIN"].FillWeight = 90;
+                                if (gridCustomers.Columns["State / POS"] != null) gridCustomers.Columns["State / POS"].FillWeight = 85;
+                                if (gridCustomers.Columns["Due Balance"] != null) gridCustomers.Columns["Due Balance"].FillWeight = 85;
+
+                                lblStatus.Text = $"Showing {dt.Rows.Count} customer(s)";
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    lblStatus.Text = $"Error: {ex.Message}";
+                }
+            }
+
+            private void SelectCurrentRow()
+            {
+                if (gridCustomers.SelectedRows.Count == 0 && gridCustomers.Rows.Count > 0)
+                {
+                    gridCustomers.Rows[0].Selected = true;
+                }
+
+                if (gridCustomers.SelectedRows.Count > 0)
+                {
+                    DataGridViewRow row = gridCustomers.SelectedRows[0];
+                    SelectedCustomer = new CustomerData
+                    {
+                        Id = Convert.ToInt32(row.Cells["Id"].Value),
+                        Name = row.Cells["Customer Name"].Value?.ToString() ?? "Walk-in Customer",
+                        Phone = row.Cells["Phone Number"].Value?.ToString() ?? "",
+                        Address = row.Cells["Address"].Value?.ToString() ?? "",
+                        GSTIN = row.Cells["GSTIN"].Value?.ToString() ?? "",
+                        StateName = row.Cells["State / POS"].Value?.ToString() ?? salonStateName,
+                        StateCode = row.Cells["StateCode"]?.Value?.ToString() ?? salonStateCode,
+                        Email = row.Cells["Email"]?.Value?.ToString() ?? "",
+                        DueBalance = row.Cells["Due Balance"] != null && row.Cells["Due Balance"].Value != DBNull.Value ? Convert.ToDecimal(row.Cells["Due Balance"].Value) : 0m
+                    };
+                    this.DialogResult = DialogResult.OK;
+                    this.Close();
+                }
+            }
+
+            private void SelectWalkIn()
+            {
+                try
+                {
+                    using (SqlConnection conn = new SqlConnection(DatabaseHelper.ConnectionString))
+                    {
+                        conn.Open();
+                        using (SqlCommand cmd = new SqlCommand("SELECT TOP 1 Id, Name, ISNULL(Phone, '+977-9800000000') AS Phone, ISNULL(GSTIN, '') AS GSTIN, ISNULL(StateName, 'Delhi') AS StateName, ISNULL(StateCode, '07') AS StateCode FROM Customers WHERE Name LIKE '%Walk-in%' OR Phone LIKE '%9800000000%' ORDER BY Id ASC", conn))
+                        {
+                            using (SqlDataReader rdr = cmd.ExecuteReader())
+                            {
+                                if (rdr.Read())
+                                {
+                                    SelectedCustomer = new CustomerData
+                                    {
+                                        Id = Convert.ToInt32(rdr["Id"]),
+                                        Name = rdr["Name"].ToString(),
+                                        Phone = rdr["Phone"].ToString(),
+                                        GSTIN = rdr["GSTIN"].ToString(),
+                                        StateName = rdr["StateName"].ToString(),
+                                        StateCode = rdr["StateCode"].ToString()
+                                    };
+                                    this.DialogResult = DialogResult.OK;
+                                    this.Close();
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+                catch { }
+
+                // Fallback
+                SelectedCustomer = new CustomerData
+                {
+                    Id = 1,
+                    Name = "Walk-in Customer",
+                    Phone = "+977-9800000000",
+                    StateName = salonStateName,
+                    StateCode = salonStateCode
+                };
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            }
+
+            private void OpenQuickAdd()
+            {
+                using (QuickAddCustomerModal dlg = new QuickAddCustomerModal(salonStateName, salonStateCode, txtSearch.Text.Trim()))
+                {
+                    if (dlg.ShowDialog() == DialogResult.OK && dlg.CreatedCustomer != null)
+                    {
+                        SelectedCustomer = dlg.CreatedCustomer;
+                        this.DialogResult = DialogResult.OK;
+                        this.Close();
                     }
                 }
             }
-            catch (Exception ex)
+        }
+
+        public class QuickAddCustomerModal : Form
+        {
+            public CustomerData CreatedCustomer { get; private set; }
+
+            private string defaultStateName;
+            private string defaultStateCode;
+            private TextBox txtName;
+            private TextBox txtPhone;
+            private TextBox txtAddress;
+            private TextBox txtGSTIN;
+            private Button btnSave;
+            private Button btnCancel;
+
+            public QuickAddCustomerModal(string stateName, string stateCode, string initialText = "")
             {
-                MessageBox.Show($"Error adding client: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                this.defaultStateName = stateName;
+                this.defaultStateCode = stateCode;
+                InitializeComponent(initialText);
+            }
+
+            private void InitializeComponent(string initialText)
+            {
+                this.Text = "Register New Customer";
+                this.ClientSize = new Size(420, 370);
+                this.StartPosition = FormStartPosition.CenterParent;
+                this.FormBorderStyle = FormBorderStyle.FixedDialog;
+                this.MaximizeBox = false;
+                this.MinimizeBox = false;
+                this.BackColor = Theme.Primary;
+                this.Font = Theme.MainFont;
+                this.ForeColor = Theme.TextLight;
+
+                Label lblHeader = new Label();
+                lblHeader.Text = "➕ Register Quick Customer";
+                lblHeader.Location = new Point(20, 15);
+                lblHeader.AutoSize = true;
+                Theme.StyleLabel(lblHeader, Theme.TextWhite, Theme.SubHeaderFont);
+                this.Controls.Add(lblHeader);
+
+                int curY = 50;
+
+                // Name
+                Label lblName = new Label();
+                lblName.Text = "Full Name *";
+                lblName.Location = new Point(20, curY);
+                lblName.AutoSize = true;
+                Theme.StyleLabel(lblName, Theme.TextMuted, Theme.BoldFont);
+                this.Controls.Add(lblName);
+
+                txtName = new TextBox();
+                txtName.Location = new Point(20, curY + 20);
+                txtName.Size = new Size(375, 26);
+                if (!string.IsNullOrWhiteSpace(initialText) && !char.IsDigit(initialText[0]))
+                {
+                    txtName.Text = initialText;
+                }
+                Theme.StyleTextBox(txtName);
+                this.Controls.Add(txtName);
+
+                curY += 55;
+
+                // Phone
+                Label lblPhone = new Label();
+                lblPhone.Text = "Phone Number *";
+                lblPhone.Location = new Point(20, curY);
+                lblPhone.AutoSize = true;
+                Theme.StyleLabel(lblPhone, Theme.TextMuted, Theme.BoldFont);
+                this.Controls.Add(lblPhone);
+
+                txtPhone = new TextBox();
+                txtPhone.Location = new Point(20, curY + 20);
+                txtPhone.Size = new Size(375, 26);
+                if (!string.IsNullOrWhiteSpace(initialText) && char.IsDigit(initialText[0]))
+                {
+                    txtPhone.Text = initialText;
+                }
+                Theme.StyleTextBox(txtPhone);
+                this.Controls.Add(txtPhone);
+
+                curY += 55;
+
+                // Address
+                Label lblAddr = new Label();
+                lblAddr.Text = "Address / City (Optional)";
+                lblAddr.Location = new Point(20, curY);
+                lblAddr.AutoSize = true;
+                Theme.StyleLabel(lblAddr, Theme.TextMuted, Theme.MainFont);
+                this.Controls.Add(lblAddr);
+
+                txtAddress = new TextBox();
+                txtAddress.Location = new Point(20, curY + 20);
+                txtAddress.Size = new Size(375, 26);
+                Theme.StyleTextBox(txtAddress);
+                this.Controls.Add(txtAddress);
+
+                curY += 55;
+
+                // GSTIN
+                Label lblGST = new Label();
+                lblGST.Text = "GSTIN Number (Optional)";
+                lblGST.Location = new Point(20, curY);
+                lblGST.AutoSize = true;
+                Theme.StyleLabel(lblGST, Theme.TextMuted, Theme.MainFont);
+                this.Controls.Add(lblGST);
+
+                txtGSTIN = new TextBox();
+                txtGSTIN.Location = new Point(20, curY + 20);
+                txtGSTIN.Size = new Size(375, 26);
+                Theme.StyleTextBox(txtGSTIN);
+                this.Controls.Add(txtGSTIN);
+
+                curY += 60;
+
+                btnSave = new Button();
+                btnSave.Text = "✔ Save & Select";
+                btnSave.Location = new Point(165, curY);
+                btnSave.Size = new Size(130, 36);
+                Theme.StyleSuccessButton(btnSave);
+                btnSave.Click += BtnSave_Click;
+                this.Controls.Add(btnSave);
+
+                btnCancel = new Button();
+                btnCancel.Text = "Cancel";
+                btnCancel.Location = new Point(305, curY);
+                btnCancel.Size = new Size(90, 36);
+                Theme.StyleSecondaryButton(btnCancel);
+                btnCancel.Click += (s, e) => { this.DialogResult = DialogResult.Cancel; this.Close(); };
+                this.Controls.Add(btnCancel);
+
+                this.AcceptButton = btnSave;
+                this.CancelButton = btnCancel;
+
+                this.Shown += (s, e) => {
+                    if (string.IsNullOrWhiteSpace(txtName.Text)) txtName.Focus();
+                    else txtPhone.Focus();
+                };
+            }
+
+            private void BtnSave_Click(object sender, EventArgs e)
+            {
+                string name = txtName.Text.Trim();
+                string phone = txtPhone.Text.Trim();
+                string address = txtAddress.Text.Trim();
+                string gstin = txtGSTIN.Text.Trim().ToUpper();
+
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    MessageBox.Show("Please enter the client name.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtName.Focus();
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(phone))
+                {
+                    MessageBox.Show("Please enter the client phone number.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtPhone.Focus();
+                    return;
+                }
+
+                try
+                {
+                    using (SqlConnection conn = new SqlConnection(DatabaseHelper.ConnectionString))
+                    {
+                        conn.Open();
+
+                        // Check if phone number already exists
+                        using (SqlCommand cmdCheck = new SqlCommand("SELECT TOP 1 Id, Name, Phone, ISNULL(GSTIN, '') AS GSTIN, ISNULL(StateName, 'Delhi') AS StateName, ISNULL(StateCode, '07') AS StateCode, ISNULL(Address, '') AS Address FROM Customers WHERE Phone = @ph", conn))
+                        {
+                            cmdCheck.Parameters.AddWithValue("@ph", phone);
+                            using (SqlDataReader rdr = cmdCheck.ExecuteReader())
+                            {
+                                if (rdr.Read())
+                                {
+                                    int existingId = Convert.ToInt32(rdr["Id"]);
+                                    string existingName = rdr["Name"].ToString();
+                                    var choice = MessageBox.Show($"A customer with phone '{phone}' already exists: '{existingName}'.\n\nDo you want to select this existing customer?", "Customer Exists", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                                    if (choice == DialogResult.Yes)
+                                    {
+                                        CreatedCustomer = new CustomerData
+                                        {
+                                            Id = existingId,
+                                            Name = existingName,
+                                            Phone = rdr["Phone"].ToString(),
+                                            GSTIN = rdr["GSTIN"].ToString(),
+                                            StateName = rdr["StateName"].ToString(),
+                                            StateCode = rdr["StateCode"].ToString(),
+                                            Address = rdr["Address"].ToString()
+                                        };
+                                        this.DialogResult = DialogResult.OK;
+                                        this.Close();
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Insert new customer
+                        using (SqlCommand cmd = new SqlCommand(@"
+                            INSERT INTO Customers (Name, Phone, Address, GSTIN, StateName, StateCode, Email, CreatedAt)
+                            OUTPUT INSERTED.Id
+                            VALUES (@name, @phone, @addr, @gst, @stName, @stCode, 'client@saloon.com', GETDATE())", conn))
+                        {
+                            cmd.Parameters.AddWithValue("@name", name);
+                            cmd.Parameters.AddWithValue("@phone", phone);
+                            cmd.Parameters.AddWithValue("@addr", string.IsNullOrEmpty(address) ? (object)DBNull.Value : address);
+                            cmd.Parameters.AddWithValue("@gst", string.IsNullOrEmpty(gstin) ? (object)DBNull.Value : gstin);
+                            cmd.Parameters.AddWithValue("@stName", defaultStateName);
+                            cmd.Parameters.AddWithValue("@stCode", defaultStateCode);
+
+                            int newId = (int)cmd.ExecuteScalar();
+
+                            CreatedCustomer = new CustomerData
+                            {
+                                Id = newId,
+                                Name = name,
+                                Phone = phone,
+                                Address = address,
+                                GSTIN = gstin,
+                                StateName = defaultStateName,
+                                StateCode = defaultStateCode
+                            };
+
+                            this.DialogResult = DialogResult.OK;
+                            this.Close();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error saving customer: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 

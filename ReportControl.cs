@@ -97,6 +97,7 @@ namespace MeroDokan
         private DateTimePicker commToDate;
         private ComboBox comboCommStaff;
         private ComboBox comboCommDateFilter;
+        private ComboBox comboCommItemType;
         private DataGridView gridStaffCommissions;
         private Button btnCommSearch;
         private Panel cardCommRevenue;
@@ -105,6 +106,8 @@ namespace MeroDokan
         private Label lblCommRevenueVal;
         private Label lblCommPayableVal;
         private Label lblCommCountVal;
+        private Label lblCommCountHeader;
+        private Label lblCommRevenueHeader;
 
         // Stylist Job Summary Tab controls
         private Panel panelStylistJobs;
@@ -792,7 +795,13 @@ namespace MeroDokan
 
         private Label CreatePLCardContent(Panel card, string header, string initVal, Color valColor)
         {
-            Label lblHeader = new Label();
+            Label dummy;
+            return CreatePLCardContent(card, header, initVal, valColor, out dummy);
+        }
+
+        private Label CreatePLCardContent(Panel card, string header, string initVal, Color valColor, out Label lblHeader)
+        {
+            lblHeader = new Label();
             lblHeader.Text = header;
             lblHeader.Location = new Point(12, 12);
             lblHeader.AutoSize = true;
@@ -842,41 +851,44 @@ namespace MeroDokan
                                 fd.ItemSubTotal as [SubTotal], 
                                 fd.ItemDiscount as [Discount], 
                                 fd.ItemTax as [Tax], 
-                                (fd.ItemSubTotal - fd.ItemDiscount + fd.ItemTax) as [Grand Total], 
                                 CASE 
-                                    WHEN s.GrandTotal > 0 
+                                    WHEN s.SubTotal > 0 THEN ROUND(s.GrandTotal * (fd.ItemSubTotal / s.SubTotal), 2)
+                                    ELSE 0.00
+                                END as [Grand Total], 
+                                CASE 
+                                    WHEN s.SubTotal > 0 
                                     THEN ROUND((CASE 
                                             WHEN (s.AmountPaid + ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) > s.GrandTotal 
                                             THEN s.GrandTotal 
                                             ELSE (s.AmountPaid + ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) 
-                                        END) * ((fd.ItemSubTotal - fd.ItemDiscount + fd.ItemTax) / s.GrandTotal), 2)
+                                        END) * (fd.ItemSubTotal / s.SubTotal), 2)
                                     ELSE 0.00
                                 END as [Amount Paid], 
                                 CASE 
-                                    WHEN s.GrandTotal > 0 
+                                    WHEN s.SubTotal > 0 
                                     THEN ROUND((CASE 
                                             WHEN s.PaymentMethod = 'Cash' THEN s.AmountPaid
                                             WHEN s.PaymentMethod = 'Split' THEN ISNULL(s.CashAmount, 0)
                                             ELSE 0.00
-                                        END) * ((fd.ItemSubTotal - fd.ItemDiscount + fd.ItemTax) / s.GrandTotal), 2)
+                                        END) * (fd.ItemSubTotal / s.SubTotal), 2)
                                     ELSE 0.00
                                 END as [Cash Paid],
                                 CASE 
-                                    WHEN s.GrandTotal > 0 
+                                    WHEN s.SubTotal > 0 
                                     THEN ROUND((CASE 
                                             WHEN s.PaymentMethod IN ('Card', 'QR Pay', 'UPI', 'Wallet', 'Online', 'QR Pay / UPI') THEN s.AmountPaid
                                             WHEN s.PaymentMethod = 'Split' THEN ISNULL(s.OnlineAmount, 0)
                                             ELSE 0.00
-                                        END) * ((fd.ItemSubTotal - fd.ItemDiscount + fd.ItemTax) / s.GrandTotal), 2)
+                                        END) * (fd.ItemSubTotal / s.SubTotal), 2)
                                     ELSE 0.00
                                 END as [Online Paid],
                                 CASE 
-                                    WHEN s.GrandTotal > 0 
+                                    WHEN s.SubTotal > 0 
                                     THEN ROUND((CASE 
                                             WHEN (s.DueAmount - ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) < 0 
                                             THEN 0.00 
                                             ELSE (s.DueAmount - ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) 
-                                        END) * ((fd.ItemSubTotal - fd.ItemDiscount + fd.ItemTax) / s.GrandTotal), 2)
+                                        END) * (fd.ItemSubTotal / s.SubTotal), 2)
                                     ELSE 0.00
                                 END as [Due Amount], 
                                 CASE
@@ -911,41 +923,44 @@ namespace MeroDokan
                                 fd.ItemSubTotal as [SubTotal], 
                                 fd.ItemDiscount as [Discount], 
                                 fd.ItemTax as [Tax], 
-                                (fd.ItemSubTotal - fd.ItemDiscount + fd.ItemTax) as [Grand Total], 
                                 CASE 
-                                    WHEN s.GrandTotal > 0 
+                                    WHEN s.SubTotal > 0 THEN ROUND(s.GrandTotal * (fd.ItemSubTotal / s.SubTotal), 2)
+                                    ELSE 0.00
+                                END as [Grand Total], 
+                                CASE 
+                                    WHEN s.SubTotal > 0 
                                     THEN ROUND((CASE 
                                             WHEN (s.AmountPaid + ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) > s.GrandTotal 
                                             THEN s.GrandTotal 
                                             ELSE (s.AmountPaid + ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) 
-                                        END) * ((fd.ItemSubTotal - fd.ItemDiscount + fd.ItemTax) / s.GrandTotal), 2)
+                                        END) * (fd.ItemSubTotal / s.SubTotal), 2)
                                     ELSE 0.00
                                 END as [Amount Paid], 
                                 CASE 
-                                    WHEN s.GrandTotal > 0 
+                                    WHEN s.SubTotal > 0 
                                     THEN ROUND((CASE 
                                             WHEN s.PaymentMethod = 'Cash' THEN s.AmountPaid
                                             WHEN s.PaymentMethod = 'Split' THEN ISNULL(s.CashAmount, 0)
                                             ELSE 0.00
-                                        END) * ((fd.ItemSubTotal - fd.ItemDiscount + fd.ItemTax) / s.GrandTotal), 2)
+                                        END) * (fd.ItemSubTotal / s.SubTotal), 2)
                                     ELSE 0.00
                                 END as [Cash Paid],
                                 CASE 
-                                    WHEN s.GrandTotal > 0 
+                                    WHEN s.SubTotal > 0 
                                     THEN ROUND((CASE 
                                             WHEN s.PaymentMethod IN ('Card', 'QR Pay', 'UPI', 'Wallet', 'Online', 'QR Pay / UPI') THEN s.AmountPaid
                                             WHEN s.PaymentMethod = 'Split' THEN ISNULL(s.OnlineAmount, 0)
                                             ELSE 0.00
-                                        END) * ((fd.ItemSubTotal - fd.ItemDiscount + fd.ItemTax) / s.GrandTotal), 2)
+                                        END) * (fd.ItemSubTotal / s.SubTotal), 2)
                                     ELSE 0.00
                                 END as [Online Paid],
                                 CASE 
-                                    WHEN s.GrandTotal > 0 
+                                    WHEN s.SubTotal > 0 
                                     THEN ROUND((CASE 
                                             WHEN (s.DueAmount - ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) < 0 
                                             THEN 0.00 
                                             ELSE (s.DueAmount - ISNULL((SELECT SUM(Amount) FROM CustomerPayments WHERE SaleId = s.Id), 0)) 
-                                        END) * ((fd.ItemSubTotal - fd.ItemDiscount + fd.ItemTax) / s.GrandTotal), 2)
+                                        END) * (fd.ItemSubTotal / s.SubTotal), 2)
                                     ELSE 0.00
                                 END as [Due Amount], 
                                 CASE
@@ -2440,7 +2455,7 @@ Period: {fromDate:yyyy-MM-dd} to {toDate:yyyy-MM-dd}
             filterBar.Controls.Add(lblRange);
 
             comboCommDateFilter = new ComboBox();
-            comboCommDateFilter.Size = new Size(110, 28);
+            comboCommDateFilter.Size = new Size(105, 28);
             comboCommDateFilter.Margin = new Padding(2, 2, 3, 2);
             comboCommDateFilter.DropDownStyle = ComboBoxStyle.DropDownList;
             comboCommDateFilter.Items.AddRange(new string[] { "Today", "Yesterday", "This Week", "This Month", "Last Month", "This Year", "All Time", "Custom Range" });
@@ -2469,15 +2484,33 @@ Period: {fromDate:yyyy-MM-dd} to {toDate:yyyy-MM-dd}
             filterBar.Controls.Add(lblStaffFilter);
 
             comboCommStaff = new ComboBox();
-            comboCommStaff.Size = new Size(140, 28);
+            comboCommStaff.Size = new Size(130, 28);
             comboCommStaff.Margin = new Padding(2, 2, 3, 2);
             comboCommStaff.DropDownStyle = ComboBoxStyle.DropDownList;
             Theme.StyleComboBox(comboCommStaff);
+            comboCommStaff.SelectedIndexChanged += (s, e) => LoadStaffCommissions();
             filterBar.Controls.Add(comboCommStaff);
+
+            Label lblTypeFilter = new Label();
+            lblTypeFilter.Text = "Type:";
+            lblTypeFilter.Margin = new Padding(4, 6, 2, 2);
+            lblTypeFilter.AutoSize = true;
+            Theme.StyleLabel(lblTypeFilter, Theme.TextDark, Theme.BoldFont);
+            filterBar.Controls.Add(lblTypeFilter);
+
+            comboCommItemType = new ComboBox();
+            comboCommItemType.Size = new Size(100, 28);
+            comboCommItemType.Margin = new Padding(2, 2, 3, 2);
+            comboCommItemType.DropDownStyle = ComboBoxStyle.DropDownList;
+            Theme.StyleComboBox(comboCommItemType);
+            comboCommItemType.Items.AddRange(new string[] { "Services", "Products" });
+            comboCommItemType.SelectedIndex = 0; // Default is Services
+            comboCommItemType.SelectedIndexChanged += (s, e) => LoadStaffCommissions();
+            filterBar.Controls.Add(comboCommItemType);
 
             btnCommSearch = new Button();
             btnCommSearch.Text = "🔍 Search";
-            btnCommSearch.Size = new Size(80, 28);
+            btnCommSearch.Size = new Size(75, 28);
             btnCommSearch.Margin = new Padding(2, 2, 3, 2);
             Theme.StylePrimaryButton(btnCommSearch);
             btnCommSearch.Click += (s, e) => LoadStaffCommissions();
@@ -2485,10 +2518,15 @@ Period: {fromDate:yyyy-MM-dd} to {toDate:yyyy-MM-dd}
 
             Button btnExportComm = new Button();
             btnExportComm.Text = "📊 Export Excel";
-            btnExportComm.Size = new Size(118, 28);
+            btnExportComm.Size = new Size(115, 28);
             btnExportComm.Margin = new Padding(2, 2, 3, 2);
             Theme.StyleSuccessButton(btnExportComm);
-            btnExportComm.Click += (s, e) => ExportGridToExcel(gridStaffCommissions, "Stylist_Commissions", "Stylist Commissions & Performance Report");
+            btnExportComm.Click += (s, e) => {
+                bool isProd = (comboCommItemType != null && comboCommItemType.SelectedIndex == 1);
+                string filePrefix = isProd ? "Stylist_Products_Sold" : "Stylist_Commissions";
+                string reportHeading = isProd ? "Stylist Products Sold & Performance Report" : "Stylist Commissions & Performance Report";
+                ExportGridToExcel(gridStaffCommissions, filePrefix, reportHeading);
+            };
             filterBar.Controls.Add(btnExportComm);
 
             page.Controls.Add(filterBar);
@@ -2506,18 +2544,18 @@ Period: {fromDate:yyyy-MM-dd} to {toDate:yyyy-MM-dd}
             layoutCards.BackColor = Color.Transparent;
             page.Controls.Add(layoutCards);
 
-            // 1. Services Delivered Count
+            // 1. Services Delivered Count / Products Sold Count
             cardCommCount = Theme.CreateCard(270, 65);
             cardCommCount.Dock = DockStyle.Fill;
             cardCommCount.Margin = new Padding(0, 0, 10, 0);
-            lblCommCountVal = CreatePLCardContent(cardCommCount, "SERVICES DELIVERED", "0 Services", Theme.Accent);
+            lblCommCountVal = CreatePLCardContent(cardCommCount, "SERVICES DELIVERED", "0 Service(s)", Theme.Accent, out lblCommCountHeader);
             layoutCards.Controls.Add(cardCommCount, 0, 0);
 
-            // 2. Gross Service Revenue
+            // 2. Gross Service Revenue / Product Revenue
             cardCommRevenue = Theme.CreateCard(270, 65);
             cardCommRevenue.Dock = DockStyle.Fill;
             cardCommRevenue.Margin = new Padding(10, 0, 10, 0);
-            lblCommRevenueVal = CreatePLCardContent(cardCommRevenue, "TOTAL SERVICE REVENUE", "Rs. 0.00", Theme.TextWhite);
+            lblCommRevenueVal = CreatePLCardContent(cardCommRevenue, "TOTAL SERVICE REVENUE", "Rs. 0.00", Theme.TextWhite, out lblCommRevenueHeader);
             layoutCards.Controls.Add(cardCommRevenue, 1, 0);
 
             // 3. Total Commission Payable
@@ -2797,35 +2835,80 @@ Period: {fromDate:yyyy-MM-dd} to {toDate:yyyy-MM-dd}
             {
                 if (gridStaffCommissions == null) return;
 
+                bool isProductView = (comboCommItemType != null && comboCommItemType.SelectedIndex == 1);
+
                 using (SqlConnection conn = new SqlConnection(DatabaseHelper.ConnectionString))
                 {
                     conn.Open();
-                    string query = @"
-                        SELECT 
-                            CONVERT(VARCHAR(10), s.SaleDate, 120) AS [Date],
-                            s.InvoiceNumber AS [Invoice #],
-                            c.Name AS [Client],
-                            srv.Name AS [Service Name],
-                            st.Name AS [Stylist / Specialist],
-                            sd.Quantity AS [Qty],
-                            sd.UnitPrice AS [Rate (Rs.)],
-                            sd.Total AS [Service Amount (Rs.)],
-                            ISNULL(st.CommissionRate, 10.00) AS [Comm %],
-                            ROUND(sd.Total * (ISNULL(st.CommissionRate, 10.00) / 100.0), 2) AS [Commission Earned (Rs.)]
-                        FROM SaleDetails sd
-                        INNER JOIN Sales s ON sd.SaleId = s.Id
-                        INNER JOIN Services srv ON sd.ServiceId = srv.Id
-                        INNER JOIN Staff st ON sd.StaffId = st.Id
-                        LEFT JOIN Customers c ON s.CustomerId = c.Id
-                        WHERE CAST(s.SaleDate AS DATE) BETWEEN @from AND @to
-                          AND sd.ItemType = 'Service'";
+                    string query;
 
-                    if (comboCommStaff?.SelectedItem is SalesBillingControl.ComboBoxItem selectedStaff && selectedStaff.Id > 0)
+                    if (isProductView)
                     {
-                        query += " AND sd.StaffId = @staffId";
-                    }
+                        query = @"
+                            SELECT 
+                                CONVERT(VARCHAR(10), s.SaleDate, 120) AS [Date],
+                                s.InvoiceNumber AS [Invoice #],
+                                ISNULL(c.Name, 'Walk-in Client') AS [Client],
+                                p.Name AS [Product Name],
+                                st.Name AS [Stylist / Specialist],
+                                sd.Quantity AS [Qty],
+                                sd.UnitPrice AS [Rate (Rs.)],
+                                ISNULL(ROUND(sd.Total * (ISNULL(s.Discount, 0.0) / NULLIF(s.SubTotal, 0.0)), 2), 0.00) AS [Discount (Rs.)],
+                                (sd.Total - ISNULL(ROUND(sd.Total * (ISNULL(s.Discount, 0.0) / NULLIF(s.SubTotal, 0.0)), 2), 0.00)) AS [Product Amount (Rs.)],
+                                ISNULL(st.CommissionRate, 10.00) AS [Comm %],
+                                ROUND((sd.Total - ISNULL(ROUND(sd.Total * (ISNULL(s.Discount, 0.0) / NULLIF(s.SubTotal, 0.0)), 2), 0.00)) * (ISNULL(st.CommissionRate, 10.00) / 100.0), 2) AS [Commission Earned (Rs.)]
+                            FROM SaleDetails sd
+                            INNER JOIN Sales s ON sd.SaleId = s.Id
+                            INNER JOIN Products p ON sd.ProductId = p.Id
+                            INNER JOIN (
+                                SELECT DISTINCT 
+                                    s_inner.SaleId, 
+                                    s_inner.StaffId
+                                FROM SaleDetails s_inner
+                                WHERE s_inner.StaffId IS NOT NULL AND s_inner.StaffId > 0
+                            ) sale_stylist ON sale_stylist.SaleId = sd.SaleId AND (sd.StaffId IS NULL OR sd.StaffId = 0 OR sd.StaffId = sale_stylist.StaffId)
+                            INNER JOIN Staff st ON sale_stylist.StaffId = st.Id
+                            LEFT JOIN Customers c ON s.CustomerId = c.Id
+                            WHERE CAST(s.SaleDate AS DATE) BETWEEN @from AND @to
+                              AND (sd.ItemType = 'Product' OR (sd.ItemType IS NULL AND sd.ProductId IS NOT NULL))";
 
-                    query += " ORDER BY s.SaleDate DESC, s.Id DESC";
+                        if (comboCommStaff?.SelectedItem is SalesBillingControl.ComboBoxItem selectedStaff && selectedStaff.Id > 0)
+                        {
+                            query += " AND sale_stylist.StaffId = @staffId";
+                        }
+
+                        query += " ORDER BY s.SaleDate DESC, s.Id DESC";
+                    }
+                    else
+                    {
+                        query = @"
+                            SELECT 
+                                CONVERT(VARCHAR(10), s.SaleDate, 120) AS [Date],
+                                s.InvoiceNumber AS [Invoice #],
+                                ISNULL(c.Name, 'Walk-in Client') AS [Client],
+                                srv.Name AS [Service Name],
+                                st.Name AS [Stylist / Specialist],
+                                sd.Quantity AS [Qty],
+                                sd.UnitPrice AS [Rate (Rs.)],
+                                ISNULL(ROUND(sd.Total * (ISNULL(s.Discount, 0.0) / NULLIF(s.SubTotal, 0.0)), 2), 0.00) AS [Discount (Rs.)],
+                                (sd.Total - ISNULL(ROUND(sd.Total * (ISNULL(s.Discount, 0.0) / NULLIF(s.SubTotal, 0.0)), 2), 0.00)) AS [Service Amount (Rs.)],
+                                ISNULL(st.CommissionRate, 10.00) AS [Comm %],
+                                ROUND((sd.Total - ISNULL(ROUND(sd.Total * (ISNULL(s.Discount, 0.0) / NULLIF(s.SubTotal, 0.0)), 2), 0.00)) * (ISNULL(st.CommissionRate, 10.00) / 100.0), 2) AS [Commission Earned (Rs.)]
+                            FROM SaleDetails sd
+                            INNER JOIN Sales s ON sd.SaleId = s.Id
+                            INNER JOIN Services srv ON sd.ServiceId = srv.Id
+                            INNER JOIN Staff st ON sd.StaffId = st.Id
+                            LEFT JOIN Customers c ON s.CustomerId = c.Id
+                            WHERE CAST(s.SaleDate AS DATE) BETWEEN @from AND @to
+                              AND sd.ItemType = 'Service'";
+
+                        if (comboCommStaff?.SelectedItem is SalesBillingControl.ComboBoxItem selectedStaff && selectedStaff.Id > 0)
+                        {
+                            query += " AND sd.StaffId = @staffId";
+                        }
+
+                        query += " ORDER BY s.SaleDate DESC, s.Id DESC";
+                    }
 
                     using (SqlCommand cmd = new SqlCommand(query, conn))
                     {
@@ -2844,30 +2927,62 @@ Period: {fromDate:yyyy-MM-dd} to {toDate:yyyy-MM-dd}
                             gridStaffCommissions.DataSource = dt;
 
                             if (gridStaffCommissions.Columns["Rate (Rs.)"] != null) gridStaffCommissions.Columns["Rate (Rs.)"].DefaultCellStyle.Format = "N2";
+                            if (gridStaffCommissions.Columns["Discount (Rs.)"] != null) gridStaffCommissions.Columns["Discount (Rs.)"].DefaultCellStyle.Format = "N2";
                             if (gridStaffCommissions.Columns["Service Amount (Rs.)"] != null) gridStaffCommissions.Columns["Service Amount (Rs.)"].DefaultCellStyle.Format = "N2";
+                            if (gridStaffCommissions.Columns["Product Amount (Rs.)"] != null) gridStaffCommissions.Columns["Product Amount (Rs.)"].DefaultCellStyle.Format = "N2";
                             if (gridStaffCommissions.Columns["Comm %"] != null) gridStaffCommissions.Columns["Comm %"].DefaultCellStyle.Format = "N1";
                             if (gridStaffCommissions.Columns["Commission Earned (Rs.)"] != null) gridStaffCommissions.Columns["Commission Earned (Rs.)"].DefaultCellStyle.Format = "N2";
+
+                            if (gridStaffCommissions.Columns["Date"] != null) gridStaffCommissions.Columns["Date"].FillWeight = 85;
+                            if (gridStaffCommissions.Columns["Invoice #"] != null) gridStaffCommissions.Columns["Invoice #"].FillWeight = 110;
+                            if (gridStaffCommissions.Columns["Client"] != null) gridStaffCommissions.Columns["Client"].FillWeight = 110;
+                            if (gridStaffCommissions.Columns["Service Name"] != null) gridStaffCommissions.Columns["Service Name"].FillWeight = 130;
+                            if (gridStaffCommissions.Columns["Product Name"] != null) gridStaffCommissions.Columns["Product Name"].FillWeight = 130;
+                            if (gridStaffCommissions.Columns["Stylist / Specialist"] != null) gridStaffCommissions.Columns["Stylist / Specialist"].FillWeight = 110;
+                            if (gridStaffCommissions.Columns["Qty"] != null) gridStaffCommissions.Columns["Qty"].FillWeight = 45;
+                            if (gridStaffCommissions.Columns["Rate (Rs.)"] != null) gridStaffCommissions.Columns["Rate (Rs.)"].FillWeight = 75;
+                            if (gridStaffCommissions.Columns["Discount (Rs.)"] != null) gridStaffCommissions.Columns["Discount (Rs.)"].FillWeight = 70;
+                            if (gridStaffCommissions.Columns["Service Amount (Rs.)"] != null) gridStaffCommissions.Columns["Service Amount (Rs.)"].FillWeight = 85;
+                            if (gridStaffCommissions.Columns["Product Amount (Rs.)"] != null) gridStaffCommissions.Columns["Product Amount (Rs.)"].FillWeight = 85;
+                            if (gridStaffCommissions.Columns["Comm %"] != null) gridStaffCommissions.Columns["Comm %"].FillWeight = 55;
+                            if (gridStaffCommissions.Columns["Commission Earned (Rs.)"] != null) gridStaffCommissions.Columns["Commission Earned (Rs.)"].FillWeight = 85;
 
                             int totalCount = dt.Rows.Count;
                             decimal totalRev = 0;
                             decimal totalComm = 0;
 
+                            string amtCol = isProductView ? "Product Amount (Rs.)" : "Service Amount (Rs.)";
+
                             foreach (DataRow r in dt.Rows)
                             {
-                                totalRev += Convert.ToDecimal(r["Service Amount (Rs.)"]);
-                                totalComm += Convert.ToDecimal(r["Commission Earned (Rs.)"]);
+                                if (r[amtCol] != DBNull.Value)
+                                    totalRev += Convert.ToDecimal(r[amtCol]);
+                                if (r["Commission Earned (Rs.)"] != DBNull.Value)
+                                    totalComm += Convert.ToDecimal(r["Commission Earned (Rs.)"]);
                             }
 
-                            lblCommCountVal.Text = $"{totalCount} Service(s)";
-                            lblCommRevenueVal.Text = $"Rs. {totalRev:N2}";
-                            lblCommPayableVal.Text = $"Rs. {totalComm:N2}";
+                            if (isProductView)
+                            {
+                                if (lblCommCountHeader != null) lblCommCountHeader.Text = "PRODUCTS SOLD";
+                                if (lblCommRevenueHeader != null) lblCommRevenueHeader.Text = "TOTAL PRODUCT REVENUE";
+                                if (lblCommCountVal != null) lblCommCountVal.Text = $"{totalCount} Product(s)";
+                            }
+                            else
+                            {
+                                if (lblCommCountHeader != null) lblCommCountHeader.Text = "SERVICES DELIVERED";
+                                if (lblCommRevenueHeader != null) lblCommRevenueHeader.Text = "TOTAL SERVICE REVENUE";
+                                if (lblCommCountVal != null) lblCommCountVal.Text = $"{totalCount} Service(s)";
+                            }
+
+                            if (lblCommRevenueVal != null) lblCommRevenueVal.Text = $"Rs. {totalRev:N2}";
+                            if (lblCommPayableVal != null) lblCommPayableVal.Text = $"Rs. {totalComm:N2}";
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading stylist commission reports: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error loading stylist reports: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

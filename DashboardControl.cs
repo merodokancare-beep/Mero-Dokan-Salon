@@ -185,25 +185,43 @@ namespace MeroDokan
                 {
                     conn.Open();
 
-                    // 1. Service Revenue (Realized net sales after line/bill discounts)
+                    // 1. Service Revenue (Realized net sales matching Report Daily Sales)
                     using (SqlCommand cmd = new SqlCommand(@"
-                        SELECT ISNULL(SUM(CASE WHEN (sd.TaxableAmount + sd.CGSTAmount + sd.SGSTAmount + sd.IGSTAmount) > 0 
-                                               THEN (sd.TaxableAmount + sd.CGSTAmount + sd.SGSTAmount + sd.IGSTAmount) 
-                                               ELSE sd.Total END), 0)
-                        FROM SaleDetails sd
-                        WHERE sd.ItemType = 'Service'", conn))
+                        WITH FilteredDetails AS (
+                            SELECT 
+                                sd.SaleId,
+                                SUM(sd.Total) AS ItemSubTotal
+                            FROM SaleDetails sd
+                            WHERE sd.ItemType = 'Service'
+                            GROUP BY sd.SaleId
+                        )
+                        SELECT ISNULL(SUM(CASE 
+                            WHEN s.SubTotal > 0 THEN ROUND(s.GrandTotal * (fd.ItemSubTotal / s.SubTotal), 2)
+                            ELSE 0.00
+                        END), 0)
+                        FROM FilteredDetails fd
+                        INNER JOIN Sales s ON fd.SaleId = s.Id", conn))
                     {
                         totalServiceSales = Convert.ToDecimal(cmd.ExecuteScalar());
                         lblServicesVal.Text = $"Rs. {totalServiceSales:N0}";
                     }
 
-                    // 2. Product Revenue (Realized net sales after line/bill discounts)
+                    // 2. Product Revenue (Realized net sales matching Report Daily Sales)
                     using (SqlCommand cmd = new SqlCommand(@"
-                        SELECT ISNULL(SUM(CASE WHEN (sd.TaxableAmount + sd.CGSTAmount + sd.SGSTAmount + sd.IGSTAmount) > 0 
-                                               THEN (sd.TaxableAmount + sd.CGSTAmount + sd.SGSTAmount + sd.IGSTAmount) 
-                                               ELSE sd.Total END), 0)
-                        FROM SaleDetails sd
-                        WHERE sd.ItemType = 'Product' OR sd.ItemType IS NULL", conn))
+                        WITH FilteredDetails AS (
+                            SELECT 
+                                sd.SaleId,
+                                SUM(sd.Total) AS ItemSubTotal
+                            FROM SaleDetails sd
+                            WHERE (sd.ItemType = 'Product' OR sd.ItemType IS NULL OR sd.ItemType = '')
+                            GROUP BY sd.SaleId
+                        )
+                        SELECT ISNULL(SUM(CASE 
+                            WHEN s.SubTotal > 0 THEN ROUND(s.GrandTotal * (fd.ItemSubTotal / s.SubTotal), 2)
+                            ELSE 0.00
+                        END), 0)
+                        FROM FilteredDetails fd
+                        INNER JOIN Sales s ON fd.SaleId = s.Id", conn))
                     {
                         totalProductSales = Convert.ToDecimal(cmd.ExecuteScalar());
                         lblProductsVal.Text = $"Rs. {totalProductSales:N0}";
