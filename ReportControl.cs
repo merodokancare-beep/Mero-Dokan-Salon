@@ -2854,27 +2854,25 @@ Period: {fromDate:yyyy-MM-dd} to {toDate:yyyy-MM-dd}
                                 sd.Quantity AS [Qty],
                                 sd.UnitPrice AS [Rate (Rs.)],
                                 ISNULL(ROUND(sd.Total * (ISNULL(s.Discount, 0.0) / NULLIF(s.SubTotal, 0.0)), 2), 0.00) AS [Discount (Rs.)],
-                                (sd.Total - ISNULL(ROUND(sd.Total * (ISNULL(s.Discount, 0.0) / NULLIF(s.SubTotal, 0.0)), 2), 0.00)) AS [Product Amount (Rs.)],
-                                ISNULL(st.CommissionRate, 10.00) AS [Comm %],
-                                ROUND((sd.Total - ISNULL(ROUND(sd.Total * (ISNULL(s.Discount, 0.0) / NULLIF(s.SubTotal, 0.0)), 2), 0.00)) * (ISNULL(st.CommissionRate, 10.00) / 100.0), 2) AS [Commission Earned (Rs.)]
+                                (sd.Total - ISNULL(ROUND(sd.Total * (ISNULL(s.Discount, 0.0) / NULLIF(s.SubTotal, 0.0)), 2), 0.00)) AS [Product Amount (Rs.)]
                             FROM SaleDetails sd
                             INNER JOIN Sales s ON sd.SaleId = s.Id
                             INNER JOIN Products p ON sd.ProductId = p.Id
-                            INNER JOIN (
+                            LEFT JOIN (
                                 SELECT DISTINCT 
                                     s_inner.SaleId, 
                                     s_inner.StaffId
                                 FROM SaleDetails s_inner
                                 WHERE s_inner.StaffId IS NOT NULL AND s_inner.StaffId > 0
-                            ) sale_stylist ON sale_stylist.SaleId = sd.SaleId AND (sd.StaffId IS NULL OR sd.StaffId = 0 OR sd.StaffId = sale_stylist.StaffId)
-                            INNER JOIN Staff st ON sale_stylist.StaffId = st.Id
+                            ) sale_stylist ON sale_stylist.SaleId = sd.SaleId
+                            INNER JOIN Staff st ON st.Id = CASE WHEN sd.StaffId IS NOT NULL AND sd.StaffId > 0 THEN sd.StaffId ELSE sale_stylist.StaffId END
                             LEFT JOIN Customers c ON s.CustomerId = c.Id
                             WHERE CAST(s.SaleDate AS DATE) BETWEEN @from AND @to
                               AND (sd.ItemType = 'Product' OR (sd.ItemType IS NULL AND sd.ProductId IS NOT NULL))";
 
                         if (comboCommStaff?.SelectedItem is SalesBillingControl.ComboBoxItem selectedStaff && selectedStaff.Id > 0)
                         {
-                            query += " AND sale_stylist.StaffId = @staffId";
+                            query += " AND (CASE WHEN sd.StaffId IS NOT NULL AND sd.StaffId > 0 THEN sd.StaffId ELSE sale_stylist.StaffId END) = @staffId";
                         }
 
                         query += " ORDER BY s.SaleDate DESC, s.Id DESC";
@@ -2891,9 +2889,7 @@ Period: {fromDate:yyyy-MM-dd} to {toDate:yyyy-MM-dd}
                                 sd.Quantity AS [Qty],
                                 sd.UnitPrice AS [Rate (Rs.)],
                                 ISNULL(ROUND(sd.Total * (ISNULL(s.Discount, 0.0) / NULLIF(s.SubTotal, 0.0)), 2), 0.00) AS [Discount (Rs.)],
-                                (sd.Total - ISNULL(ROUND(sd.Total * (ISNULL(s.Discount, 0.0) / NULLIF(s.SubTotal, 0.0)), 2), 0.00)) AS [Service Amount (Rs.)],
-                                ISNULL(st.CommissionRate, 10.00) AS [Comm %],
-                                ROUND((sd.Total - ISNULL(ROUND(sd.Total * (ISNULL(s.Discount, 0.0) / NULLIF(s.SubTotal, 0.0)), 2), 0.00)) * (ISNULL(st.CommissionRate, 10.00) / 100.0), 2) AS [Commission Earned (Rs.)]
+                                (sd.Total - ISNULL(ROUND(sd.Total * (ISNULL(s.Discount, 0.0) / NULLIF(s.SubTotal, 0.0)), 2), 0.00)) AS [Service Amount (Rs.)]
                             FROM SaleDetails sd
                             INNER JOIN Sales s ON sd.SaleId = s.Id
                             INNER JOIN Services srv ON sd.ServiceId = srv.Id
@@ -2930,26 +2926,21 @@ Period: {fromDate:yyyy-MM-dd} to {toDate:yyyy-MM-dd}
                             if (gridStaffCommissions.Columns["Discount (Rs.)"] != null) gridStaffCommissions.Columns["Discount (Rs.)"].DefaultCellStyle.Format = "N2";
                             if (gridStaffCommissions.Columns["Service Amount (Rs.)"] != null) gridStaffCommissions.Columns["Service Amount (Rs.)"].DefaultCellStyle.Format = "N2";
                             if (gridStaffCommissions.Columns["Product Amount (Rs.)"] != null) gridStaffCommissions.Columns["Product Amount (Rs.)"].DefaultCellStyle.Format = "N2";
-                            if (gridStaffCommissions.Columns["Comm %"] != null) gridStaffCommissions.Columns["Comm %"].DefaultCellStyle.Format = "N1";
-                            if (gridStaffCommissions.Columns["Commission Earned (Rs.)"] != null) gridStaffCommissions.Columns["Commission Earned (Rs.)"].DefaultCellStyle.Format = "N2";
 
-                            if (gridStaffCommissions.Columns["Date"] != null) gridStaffCommissions.Columns["Date"].FillWeight = 85;
-                            if (gridStaffCommissions.Columns["Invoice #"] != null) gridStaffCommissions.Columns["Invoice #"].FillWeight = 110;
-                            if (gridStaffCommissions.Columns["Client"] != null) gridStaffCommissions.Columns["Client"].FillWeight = 110;
-                            if (gridStaffCommissions.Columns["Service Name"] != null) gridStaffCommissions.Columns["Service Name"].FillWeight = 130;
-                            if (gridStaffCommissions.Columns["Product Name"] != null) gridStaffCommissions.Columns["Product Name"].FillWeight = 130;
-                            if (gridStaffCommissions.Columns["Stylist / Specialist"] != null) gridStaffCommissions.Columns["Stylist / Specialist"].FillWeight = 110;
-                            if (gridStaffCommissions.Columns["Qty"] != null) gridStaffCommissions.Columns["Qty"].FillWeight = 45;
-                            if (gridStaffCommissions.Columns["Rate (Rs.)"] != null) gridStaffCommissions.Columns["Rate (Rs.)"].FillWeight = 75;
-                            if (gridStaffCommissions.Columns["Discount (Rs.)"] != null) gridStaffCommissions.Columns["Discount (Rs.)"].FillWeight = 70;
-                            if (gridStaffCommissions.Columns["Service Amount (Rs.)"] != null) gridStaffCommissions.Columns["Service Amount (Rs.)"].FillWeight = 85;
-                            if (gridStaffCommissions.Columns["Product Amount (Rs.)"] != null) gridStaffCommissions.Columns["Product Amount (Rs.)"].FillWeight = 85;
-                            if (gridStaffCommissions.Columns["Comm %"] != null) gridStaffCommissions.Columns["Comm %"].FillWeight = 55;
-                            if (gridStaffCommissions.Columns["Commission Earned (Rs.)"] != null) gridStaffCommissions.Columns["Commission Earned (Rs.)"].FillWeight = 85;
+                            if (gridStaffCommissions.Columns["Date"] != null) gridStaffCommissions.Columns["Date"].FillWeight = 90;
+                            if (gridStaffCommissions.Columns["Invoice #"] != null) gridStaffCommissions.Columns["Invoice #"].FillWeight = 120;
+                            if (gridStaffCommissions.Columns["Client"] != null) gridStaffCommissions.Columns["Client"].FillWeight = 130;
+                            if (gridStaffCommissions.Columns["Service Name"] != null) gridStaffCommissions.Columns["Service Name"].FillWeight = 150;
+                            if (gridStaffCommissions.Columns["Product Name"] != null) gridStaffCommissions.Columns["Product Name"].FillWeight = 150;
+                            if (gridStaffCommissions.Columns["Stylist / Specialist"] != null) gridStaffCommissions.Columns["Stylist / Specialist"].FillWeight = 130;
+                            if (gridStaffCommissions.Columns["Qty"] != null) gridStaffCommissions.Columns["Qty"].FillWeight = 50;
+                            if (gridStaffCommissions.Columns["Rate (Rs.)"] != null) gridStaffCommissions.Columns["Rate (Rs.)"].FillWeight = 85;
+                            if (gridStaffCommissions.Columns["Discount (Rs.)"] != null) gridStaffCommissions.Columns["Discount (Rs.)"].FillWeight = 80;
+                            if (gridStaffCommissions.Columns["Service Amount (Rs.)"] != null) gridStaffCommissions.Columns["Service Amount (Rs.)"].FillWeight = 100;
+                            if (gridStaffCommissions.Columns["Product Amount (Rs.)"] != null) gridStaffCommissions.Columns["Product Amount (Rs.)"].FillWeight = 100;
 
                             int totalCount = dt.Rows.Count;
                             decimal totalRev = 0;
-                            decimal totalComm = 0;
 
                             string amtCol = isProductView ? "Product Amount (Rs.)" : "Service Amount (Rs.)";
 
@@ -2957,8 +2948,6 @@ Period: {fromDate:yyyy-MM-dd} to {toDate:yyyy-MM-dd}
                             {
                                 if (r[amtCol] != DBNull.Value)
                                     totalRev += Convert.ToDecimal(r[amtCol]);
-                                if (r["Commission Earned (Rs.)"] != DBNull.Value)
-                                    totalComm += Convert.ToDecimal(r["Commission Earned (Rs.)"]);
                             }
 
                             if (isProductView)
@@ -2975,7 +2964,7 @@ Period: {fromDate:yyyy-MM-dd} to {toDate:yyyy-MM-dd}
                             }
 
                             if (lblCommRevenueVal != null) lblCommRevenueVal.Text = $"Rs. {totalRev:N2}";
-                            if (lblCommPayableVal != null) lblCommPayableVal.Text = $"Rs. {totalComm:N2}";
+                            if (lblCommPayableVal != null) lblCommPayableVal.Text = "Rs. 0.00";
                         }
                     }
                 }

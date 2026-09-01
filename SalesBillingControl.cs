@@ -15,6 +15,7 @@ namespace MeroDokan
     {
         // Event for requesting navigation to Appointments
         public event Action OnOpenAppointmentsRequested;
+        public event Action OnSaleCompleted;
 
         // Top Filter Bar & Barcode Scanner
         private Button btnModeProducts;
@@ -39,10 +40,11 @@ namespace MeroDokan
         private Button btnClearCart;
         private FlowLayoutPanel flowCartItems;
 
-        // Bill Mode Switch (GST vs Non-GST)
+        // Bill Mode Switch (GST vs Non-GST) & Stylist/Staff Selector for Direct Product Sales
         private Button btnBillModeGST;
         private Button btnBillModeNonGST;
         private bool isGSTBillMode = true;
+        private ComboBox comboProductStaff;
 
         // Calculation & Checkout
         private Label lblSubTotalVal;
@@ -389,6 +391,10 @@ namespace MeroDokan
                 splitCashAmount = 0;
                 splitOnlineAmount = 0;
                 SetToWalkInCustomer();
+                if (comboProductStaff != null && comboProductStaff.Items.Count > 0)
+                {
+                    comboProductStaff.SelectedIndex = 0;
+                }
                 UpdateCartUI();
                 if (txtBarcodeScan != null)
                 {
@@ -403,19 +409,19 @@ namespace MeroDokan
 
             // 1c. Bottom Checkout & Totals Area (Dock Bottom)
             Panel bottomCheckoutArea = new Panel();
-            bottomCheckoutArea.Height = 325;
+            bottomCheckoutArea.Height = 360;
             bottomCheckoutArea.Dock = DockStyle.Bottom;
             bottomCheckoutArea.BackColor = Color.Transparent;
 
             // Bill Mode Switch Bar (GST Invoice vs Non-GST Bill)
             Panel billModeBar = new Panel();
-            billModeBar.Size = new Size(356, 32);
+            billModeBar.Size = new Size(356, 30);
             billModeBar.Location = new Point(0, 0);
             billModeBar.BackColor = Color.Transparent;
 
             btnBillModeGST = new Button();
             btnBillModeGST.Text = "🧾 GST Invoice";
-            btnBillModeGST.Size = new Size(174, 30);
+            btnBillModeGST.Size = new Size(174, 28);
             btnBillModeGST.Location = new Point(0, 0);
             btnBillModeGST.FlatStyle = FlatStyle.Flat;
             btnBillModeGST.BackColor = Theme.Accent;
@@ -428,7 +434,7 @@ namespace MeroDokan
 
             btnBillModeNonGST = new Button();
             btnBillModeNonGST.Text = "📄 Non-GST Bill";
-            btnBillModeNonGST.Size = new Size(174, 30);
+            btnBillModeNonGST.Size = new Size(174, 28);
             btnBillModeNonGST.Location = new Point(178, 0);
             btnBillModeNonGST.FlatStyle = FlatStyle.Flat;
             btnBillModeNonGST.BackColor = Theme.CardBg;
@@ -441,10 +447,35 @@ namespace MeroDokan
 
             bottomCheckoutArea.Controls.Add(billModeBar);
 
+            // Stylist / Staff Selector Bar for Direct Product Sales (Defaults to Admin)
+            Panel staffSelectBar = new Panel();
+            staffSelectBar.Size = new Size(356, 28);
+            staffSelectBar.Location = new Point(0, 32);
+            staffSelectBar.BackColor = Color.Transparent;
+
+            Label lblStaffSelectTitle = new Label();
+            lblStaffSelectTitle.Text = "👤 Sold By / Stylist:";
+            lblStaffSelectTitle.Location = new Point(2, 5);
+            lblStaffSelectTitle.AutoSize = true;
+            lblStaffSelectTitle.BackColor = Color.Transparent;
+            Theme.StyleLabel(lblStaffSelectTitle, Theme.TextLight, new Font("Segoe UI Semibold", 8F, FontStyle.Bold));
+            staffSelectBar.Controls.Add(lblStaffSelectTitle);
+
+            comboProductStaff = new ComboBox();
+            comboProductStaff.Size = new Size(218, 24);
+            comboProductStaff.Location = new Point(136, 2);
+            comboProductStaff.DropDownStyle = ComboBoxStyle.DropDownList;
+            comboProductStaff.Font = new Font("Segoe UI", 8.5F);
+            Theme.StyleComboBox(comboProductStaff);
+            comboProductStaff.SelectedIndexChanged += ComboProductStaff_SelectedIndexChanged;
+            staffSelectBar.Controls.Add(comboProductStaff);
+
+            bottomCheckoutArea.Controls.Add(staffSelectBar);
+
             // Calculation Card
             Panel calcCard = new Panel();
             calcCard.Size = new Size(356, 172);
-            calcCard.Location = new Point(0, 35);
+            calcCard.Location = new Point(0, 64);
             calcCard.BackColor = Theme.InputBg;
             calcCard.Padding = new Padding(10);
             calcCard.Paint += (s, e) => {
@@ -575,7 +606,7 @@ namespace MeroDokan
             // Payment Tiles (Cash, UPI, Card, Split)
             Panel payTilesPanel = new Panel();
             payTilesPanel.Size = new Size(356, 44);
-            payTilesPanel.Location = new Point(0, 214);
+            payTilesPanel.Location = new Point(0, 242);
             payTilesPanel.BackColor = Color.Transparent;
 
             btnPayCash = CreatePaymentTile("💵\nCash", 0, Theme.Success);
@@ -604,7 +635,7 @@ namespace MeroDokan
             btnPayAndPrint = new Button();
             btnPayAndPrint.Text = "🖨️  PAY & PRINT ( Rs. 0.00 )";
             btnPayAndPrint.Size = new Size(356, 46);
-            btnPayAndPrint.Location = new Point(0, 264);
+            btnPayAndPrint.Location = new Point(0, 292);
             Theme.StylePrimaryButton(btnPayAndPrint);
             btnPayAndPrint.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
             btnPayAndPrint.Click += BtnPayAndPrint_Click;
@@ -1092,7 +1123,7 @@ namespace MeroDokan
 
             string upiId = !string.IsNullOrWhiteSpace(salonUPIId) ? salonUPIId : "saloon@okhdfcbank";
             string payee = !string.IsNullOrWhiteSpace(salonUPIName) ? salonUPIName : salonShopName;
-            string tempInvRef = (isGSTBillMode ? "INV-" : "RCP-") + DateTime.Now.ToString("yyMMdd-HHmm");
+            string tempInvRef = GetNextInvoiceNumberPreview(isGSTBillMode);
 
             using (var qrDlg = new QRPaymentDialog(upiId, payee, grandTotal, tempInvRef))
             {
@@ -1128,8 +1159,67 @@ namespace MeroDokan
                         }
                     }
                 }
+                PopulateStaffDropdown();
             }
             catch { }
+        }
+
+        private void PopulateStaffDropdown()
+        {
+            if (comboProductStaff == null) return;
+            int previousSelectedId = 0;
+            if (comboProductStaff.SelectedItem is ComboBoxItem prevCbi)
+            {
+                previousSelectedId = prevCbi.Id;
+            }
+
+            comboProductStaff.Items.Clear();
+            comboProductStaff.Items.Add(new ComboBoxItem { Id = 0, Display = "👑 Admin (Default)" });
+            int selectedIdx = 0;
+            for (int i = 0; i < staffList.Count; i++)
+            {
+                var st = staffList[i];
+                var item = new ComboBoxItem {
+                    Id = st.Id,
+                    Display = $"{st.Name} ({st.Role})"
+                };
+                comboProductStaff.Items.Add(item);
+                if (st.Id == previousSelectedId)
+                {
+                    selectedIdx = i + 1;
+                }
+            }
+            comboProductStaff.SelectedIndex = selectedIdx;
+        }
+
+        private void ComboProductStaff_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var (selectedStaffId, selectedStaffName) = GetSelectedProductStaff();
+
+            // Update all product items in cart to this staff
+            bool changed = false;
+            foreach (var item in cartItems)
+            {
+                if (item.ItemType == "Product")
+                {
+                    item.StaffId = selectedStaffId;
+                    item.StaffName = selectedStaffName;
+                    changed = true;
+                }
+            }
+            if (changed)
+            {
+                UpdateCartUI();
+            }
+        }
+
+        private (int StaffId, string StaffName) GetSelectedProductStaff()
+        {
+            if (comboProductStaff?.SelectedItem is ComboBoxItem cbi && cbi.Id > 0)
+            {
+                return (cbi.Id, cbi.Display.Split('(')[0].Trim());
+            }
+            return (0, "Admin");
         }
 
         private void LoadSalonGSTProfile()
@@ -1645,14 +1735,15 @@ namespace MeroDokan
             }
             else
             {
+                var (curStaffId, curStaffName) = GetSelectedProductStaff();
                 cartItems.Add(new CartItem {
                     ItemType = "Product",
                     ItemId = prd.Id,
                     Code = prd.Code,
                     HSNSAC = !string.IsNullOrEmpty(prd.HSNCode) ? prd.HSNCode : "3305",
                     Name = prd.Name,
-                    StaffId = 0,
-                    StaffName = "-",
+                    StaffId = curStaffId,
+                    StaffName = curStaffName,
                     UnitPrice = prd.Price,
                     Quantity = 1,
                     GSTRate = prd.GSTRate > 0 ? prd.GSTRate : defaultGSTRate,
@@ -1818,11 +1909,14 @@ namespace MeroDokan
                 }
                 else
                 {
-                    lblStaff.Text = $"📦 Product (Qty: {item.Quantity})";
+                    string seller = item.StaffId > 0 ? item.StaffName : "Admin";
+                    lblStaff.Text = $"📦 Sold by: {seller} ▾";
                     lblStaff.Location = new Point(34, 28);
                     lblStaff.Size = new Size(150, 18);
                     lblStaff.BackColor = Color.Transparent;
-                    Theme.StyleLabel(lblStaff, Theme.TextMuted, new Font("Segoe UI", 7.5F));
+                    Theme.StyleLabel(lblStaff, item.StaffId > 0 ? Theme.Accent : Theme.TextMuted, new Font("Segoe UI Semibold", 7.5F, FontStyle.Bold));
+                    lblStaff.Cursor = Cursors.Hand;
+                    lblStaff.Click += (s, e) => ShowStaffSelectMenu(item, lblStaff);
                 }
                 row.Controls.Add(lblStaff);
 
@@ -2115,6 +2209,14 @@ namespace MeroDokan
             menu.ForeColor = Theme.TextLight;
             menu.Font = Theme.MainFont;
             
+            var adminItem = menu.Items.Add("👑  Admin (Default)");
+            adminItem.ForeColor = Theme.TextLight;
+            adminItem.Click += (s, e) => {
+                item.StaffId = 0;
+                item.StaffName = "Admin";
+                UpdateCartUI();
+            };
+
             foreach (var st in staffList)
             {
                 var menuItem = menu.Items.Add($"✂️  {st.Name}  ({st.Role})");
@@ -2432,12 +2534,13 @@ namespace MeroDokan
                                                 HSNSAC, GSTRate, TaxableAmount, CGSTAmount, SGSTAmount, IGSTAmount
                                             )
                                             VALUES (
-                                                @saleId, 'Product', @prodId, NULL, NULL, @qty, @price, @tot, @cost,
+                                                @saleId, 'Product', @prodId, NULL, @staffId, @qty, @price, @tot, @cost,
                                                 @hsn, @gstRate, @taxable, @cgst, @sgst, @igst
                                             )", conn, trans))
                                         {
                                             cmd.Parameters.AddWithValue("@saleId", editingSaleId);
                                             cmd.Parameters.AddWithValue("@prodId", item.ItemId);
+                                            cmd.Parameters.AddWithValue("@staffId", item.StaffId > 0 ? (object)item.StaffId : DBNull.Value);
                                             cmd.Parameters.AddWithValue("@qty", item.Quantity);
                                             cmd.Parameters.AddWithValue("@price", item.UnitPrice);
                                             cmd.Parameters.AddWithValue("@tot", item.Total);
@@ -2538,8 +2641,7 @@ namespace MeroDokan
                                 // ==============================================================
                                 // NEW SALE INVOICE CREATION
                                 // ==============================================================
-                                string prefix = isGSTBillMode ? "INV-" : "RCP-";
-                                string invoiceNum = prefix + DateTime.Now.ToString("yyMMdd-HHmmss");
+                                string invoiceNum = GenerateNextInvoiceNumber(conn, trans, isGSTBillMode);
 
                                 // 1. Sales Header
                                 int newSaleId = 0;
@@ -2620,12 +2722,13 @@ namespace MeroDokan
                                                 HSNSAC, GSTRate, TaxableAmount, CGSTAmount, SGSTAmount, IGSTAmount
                                             )
                                             VALUES (
-                                                @saleId, 'Product', @prodId, NULL, NULL, @qty, @price, @tot, @cost,
+                                                @saleId, 'Product', @prodId, NULL, @staffId, @qty, @price, @tot, @cost,
                                                 @hsn, @gstRate, @taxable, @cgst, @sgst, @igst
                                             )", conn, trans))
                                         {
                                             cmd.Parameters.AddWithValue("@saleId", newSaleId);
                                             cmd.Parameters.AddWithValue("@prodId", item.ItemId);
+                                            cmd.Parameters.AddWithValue("@staffId", item.StaffId > 0 ? (object)item.StaffId : DBNull.Value);
                                             cmd.Parameters.AddWithValue("@qty", item.Quantity);
                                             cmd.Parameters.AddWithValue("@price", item.UnitPrice);
                                             cmd.Parameters.AddWithValue("@tot", item.Total);
@@ -2653,9 +2756,43 @@ namespace MeroDokan
                                 {
                                     try
                                     {
-                                        using (SqlCommand cmdAppt = new SqlCommand("UPDATE Appointments SET Status = 'Billed', SaleId = @saleId WHERE Id = @apptId", conn, trans))
+                                        int primaryStaffId = 0;
+                                        var srvIdsList = new System.Collections.Generic.List<int>();
+                                        var srvNamesList = new System.Collections.Generic.List<string>();
+                                        var srvStaffIdsList = new System.Collections.Generic.List<string>();
+
+                                        foreach (var item in cartItems)
+                                        {
+                                            if (item.ItemType == "Service")
+                                            {
+                                                if (primaryStaffId == 0 && item.StaffId > 0) primaryStaffId = item.StaffId;
+                                                srvIdsList.Add(item.ItemId);
+                                                srvNamesList.Add($"{item.Name}" + (!string.IsNullOrEmpty(item.StaffName) ? $" ({item.StaffName})" : ""));
+                                                srvStaffIdsList.Add($"{item.ItemId}:{item.StaffId}");
+                                            }
+                                        }
+
+                                        string srvIdsStr = string.Join(",", srvIdsList);
+                                        string srvNamesStr = string.Join(" ➜ ", srvNamesList);
+                                        string srvStaffIdsStr = string.Join(",", srvStaffIdsList);
+
+                                        using (SqlCommand cmdAppt = new SqlCommand(@"
+                                            UPDATE Appointments SET 
+                                                Status = 'Billed', 
+                                                SaleId = @saleId,
+                                                CustomerId = @cust,
+                                                StaffId = CASE WHEN @stId > 0 THEN @stId ELSE StaffId END,
+                                                ServiceIds = CASE WHEN LEN(@sIds) > 0 THEN @sIds ELSE ServiceIds END,
+                                                ServiceNames = CASE WHEN LEN(@sNames) > 0 THEN @sNames ELSE ServiceNames END,
+                                                ServiceStaffIds = CASE WHEN LEN(@sStaffIds) > 0 THEN @sStaffIds ELSE ServiceStaffIds END
+                                            WHERE Id = @apptId", conn, trans))
                                         {
                                             cmdAppt.Parameters.AddWithValue("@saleId", newSaleId);
+                                            cmdAppt.Parameters.AddWithValue("@cust", currentCustomerId);
+                                            cmdAppt.Parameters.AddWithValue("@stId", primaryStaffId);
+                                            cmdAppt.Parameters.AddWithValue("@sIds", srvIdsStr);
+                                            cmdAppt.Parameters.AddWithValue("@sNames", srvNamesStr);
+                                            cmdAppt.Parameters.AddWithValue("@sStaffIds", srvStaffIdsStr);
                                             cmdAppt.Parameters.AddWithValue("@apptId", currentAppointmentId);
                                             cmdAppt.ExecuteNonQuery();
                                         }
@@ -2672,6 +2809,7 @@ namespace MeroDokan
 
                                 trans.Commit();
                                 lastSaleId = newSaleId;
+                                try { OnSaleCompleted?.Invoke(); } catch { }
 
                                 string billTypeLabel = isGSTBillMode ? "GST Tax Invoice" : "Non-GST Retail Bill";
                                 MessageBox.Show($"{billTypeLabel} generated successfully!\nNumber: {invoiceNum}\nTotal: Rs. {grandTotal:N2}", "Sale Completed", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -2692,6 +2830,10 @@ namespace MeroDokan
                                 splitOnlineAmount = 0;
                                 SelectPaymentMode("Cash", false);
                                 SetToWalkInCustomer();
+                                if (comboProductStaff != null && comboProductStaff.Items.Count > 0)
+                                {
+                                    comboProductStaff.SelectedIndex = 0;
+                                }
                                 UpdateCartUI();
 
                                 if (txtBarcodeScan != null)
@@ -2713,6 +2855,57 @@ namespace MeroDokan
             catch (Exception ex)
             {
                 MessageBox.Show($"Error during checkout: {ex.Message}", "Checkout Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        public static string GenerateNextInvoiceNumber(SqlConnection conn, SqlTransaction trans, bool isGST)
+        {
+            string datePart = DateTime.Now.ToString("yyMMdd");
+            string prefix = (isGST ? "INV-" : "RCP-") + datePart + "-";
+            int maxSerial = 0;
+
+            try
+            {
+                using (SqlCommand cmd = new SqlCommand("SELECT InvoiceNumber FROM Sales WHERE InvoiceNumber LIKE @pattern", conn, trans))
+                {
+                    cmd.Parameters.AddWithValue("@pattern", prefix + "%");
+                    using (SqlDataReader rdr = cmd.ExecuteReader())
+                    {
+                        while (rdr.Read())
+                        {
+                            string inv = rdr[0]?.ToString() ?? "";
+                            if (inv.StartsWith(prefix))
+                            {
+                                string suffix = inv.Substring(prefix.Length);
+                                // Check for sequential serials (len <= 5 to exclude 6-digit HHmmss timestamps)
+                                if (suffix.Length <= 5 && int.TryParse(suffix, out int parsedNum))
+                                {
+                                    if (parsedNum > maxSerial) maxSerial = parsedNum;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+
+            int nextSerial = maxSerial + 1;
+            return $"{prefix}{nextSerial:D4}";
+        }
+
+        public static string GetNextInvoiceNumberPreview(bool isGST = true)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(DatabaseHelper.ConnectionString))
+                {
+                    conn.Open();
+                    return GenerateNextInvoiceNumber(conn, null, isGST);
+                }
+            }
+            catch
+            {
+                return $"{(isGST ? "INV-" : "RCP-")}{DateTime.Now:yyMMdd}-0001";
             }
         }
 
@@ -2880,14 +3073,27 @@ namespace MeroDokan
                                         Code = prodCode,
                                         HSNSAC = !string.IsNullOrEmpty(hsnSac) ? hsnSac : "3305",
                                         Name = prodName,
-                                        StaffId = 0,
-                                        StaffName = "",
+                                        StaffId = staffId,
+                                        StaffName = !string.IsNullOrEmpty(staffName) ? staffName : "Admin",
                                         UnitPrice = unitPrice,
                                         Quantity = qty,
                                         GSTRate = gstRate,
                                         CostPrice = cost,
                                         IconEmoji = "🧴"
                                     });
+
+                                    // If a staff is assigned to the product, reflect in dropdown
+                                    if (staffId > 0 && comboProductStaff != null)
+                                    {
+                                        for (int i = 0; i < comboProductStaff.Items.Count; i++)
+                                        {
+                                            if (comboProductStaff.Items[i] is ComboBoxItem cbi && cbi.Id == staffId)
+                                            {
+                                                comboProductStaff.SelectedIndex = i;
+                                                break;
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -3765,13 +3971,14 @@ namespace MeroDokan
             string itemPriceStr = Microsoft.VisualBasic.Interaction.InputBox("Enter Product Rate / Price (Rs.):", "Product Price", "500");
             if (!decimal.TryParse(itemPriceStr, out decimal itemPrice)) return;
 
+            var (curStaffId, curStaffName) = GetSelectedProductStaff();
             cartItems.Add(new CartItem {
                 ItemType = "Product",
                 ItemId = 0,
                 Code = "CUSTOM",
                 Name = itemName,
-                StaffId = 0,
-                StaffName = "-",
+                StaffId = curStaffId,
+                StaffName = curStaffName,
                 UnitPrice = itemPrice,
                 Quantity = 1,
                 CostPrice = 0,

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Documentation, Completion Sign-Off & AMC Agreement - MeroDokan Saloon & Spa POS</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+    :root {
+        --primary: #0f2a4a;
+        --primary-light: #1e3a8a;
+        --secondary: #0e7490;
+        --accent-pink: #ec4899;
+        --accent-gold: #d97706;
+        --success: #16a34a;
+        --bg-gray: #f8fafc;
+        --card-border: #e2e8f0;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        color: var(--text-main);
+        background-color: #eef2f6;
+        margin: 0;
+        padding: 30px 15px;
+        line-height: 1.6;
+    }
+
+    .container {
+        max-width: 960px;
+        margin: 0 auto;
+        background: #ffffff;
+        padding: 50px 60px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+        border: 1px solid var(--card-border);
+    }
+
+    .header-banner {
+        border-bottom: 2px solid var(--primary);
+        padding-bottom: 20px;
+        margin-bottom: 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .brand-title {
+        color: var(--primary);
+        font-size: 26px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        margin: 0 0 6px 0;
+        text-transform: uppercase;
+    }
+
+    .brand-subtitle {
+        color: var(--secondary);
+        font-size: 15px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .badge-doc {
+        background: #f0fdf4;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        display: inline-block;
+    }
+
+    .meta-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        background: var(--bg-gray);
+        border: 1px solid var(--card-border);
+        border-radius: 8px;
+        padding: 18px 24px;
+        font-size: 13.5px;
+        margin-bottom: 30px;
+    }
+
+    .meta-grid div p {
+        margin: 4px 0;
+    }
+
+    .meta-grid strong {
+        color: var(--primary);
+    }
+
+    h2 {
+        color: var(--primary);
+        font-size: 18px;
+        font-weight: 700;
+        border-left: 4px solid var(--secondary);
+        padding-left: 12px;
+        margin-top: 35px;
+        margin-bottom: 15px;
+    }
+
+    h3 {
+        color: var(--secondary);
+        font-size: 15px;
+        font-weight: 700;
+        margin-top: 20px;
+        margin-bottom: 8px;
+    }
+
+    p, li {
+        font-size: 13.5px;
+        color: #334155;
+    }
+
+    ul, ol {
+        margin: 8px 0 16px 22px;
+        padding: 0;
+    }
+
+    li {
+        margin-bottom: 6px;
+    }
+
+    .callout {
+        background: #f0f9ff;
+        border-left: 4px solid #0284c7;
+        padding: 16px 20px;
+        border-radius: 0 8px 8px 0;
+        margin: 18px 0;
+        font-size: 13.5px;
+    }
+
+    .callout-gold {
+        background: #fffbeb;
+        border-left: 4px solid #d97706;
+        padding: 18px 22px;
+        border-radius: 0 8px 8px 0;
+        margin: 20px 0;
+        font-size: 14px;
+    }
+
+    .callout-success {
+        background: #f0fdf4;
+        border-left: 4px solid #16a34a;
+        padding: 18px 22px;
+        border-radius: 0 8px 8px 0;
+        margin: 20px 0;
+        font-size: 14px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 18px 0 25px 0;
+        font-size: 13px;
+    }
+
+    th, td {
+        border: 1px solid var(--card-border);
+        padding: 11px 14px;
+        text-align: left;
+    }
+
+    th {
+        background-color: var(--primary);
+        color: #ffffff;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+    }
+
+    tr:nth-child(even) {
+        background-color: var(--bg-gray);
+    }
+
+    .status-badge {
+        background: #dcfce7;
+        color: #166534;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 11.5px;
+        display: inline-block;
+    }
+
+    .sig-table {
+        margin-top: 25px;
+    }
+
+    .sig-table th {
+        background-color: var(--primary);
+        padding: 12px;
+    }
+
+    .sig-table td {
+        height: 110px;
+        vertical-align: top;
+        padding: 15px;
+        background: #ffffff;
+    }
+
+    .workflow-card {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    }
+
+    .workflow-card-title {
+        font-weight: 700;
+        color: var(--primary);
+        font-size: 14px;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .workflow-num {
+        background: var(--secondary);
+        color: #fff;
+        border-radius: 50%;
+        width: 22px;
+        height: 22px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+    @media print {
+        body { background: #fff; padding: 0; }
+        .container { box-shadow: none; border: none; padding: 0; max-width: 100%; }
+        .no-print { display: none; }
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-banner">
+        <div>
+            <div class="brand-title">MeroDokan Saloon & Spa Management System</div>
+            <div class="brand-subtitle">Project Deliverables, Operational Workflows, Handover Sign-Off & Annual Maintenance Contract (AMC)</div>
+        </div>
+        <div style="text-align: right;">
+            <span class="badge-doc">Official Handover</span>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">Ref: <strong>DOC-SALOON-2026-v2.6</strong></div>
+        </div>
+    </div>
+
+    <div class="meta-grid">
+        <div>
+            <p><strong>Software Product:</strong> MeroDokan Saloon & Spa POS Suite (v2.6)</p>
+            <p><strong>Deployment Mode:</strong> Offline-First Desktop Client (MS SQL Server)</p>
+            <p><strong>Date of Commissioning:</strong> September 1, 2026</p>
+        </div>
+        <div>
+            <p><strong>Client / Salon Entity:</strong> Valued Salon / Spa Enterprise</p>
+            <p><strong>Primary Node Status:</strong> Installed, Configured & Commissioned</p>
+            <p><strong>Warranty / Support:</strong> 12 Months Standard Coverage Active</p>
+        </div>
+    </div>
+
+    <h2>1. Executive Project Summary</h2>
+    <p>
+        <strong>MeroDokan Saloon & Spa POS</strong> is a high-performance desktop application engineered specifically for beauty salons, hair studios, luxury spas, and cosmetic parlours.
+        The platform delivers 100% offline operational independence, eliminating counter lag and ensuring uninterrupted billing even during internet outages.
+        The software manages dual-item invoices (services and retail goods), calculates individual stylist commissions automatically, schedules client appointments without double-booking, audits product stock movements, and reconciles cash at day-end.
+    </p>
+
+    <div class="callout">
+        <strong>★ Core Architectural Highlights:</strong><br>
+        • <strong>Zero Internet Dependency:</strong> Ultra-fast responsive UI built on C# Windows Forms and local MS SQL database.<br>
+        • <strong>Automated Multi-Tier Commissions:</strong> Line-item level commission tracking for service therapists and retail sales staff.<br>
+        • <strong>Dynamic Clash-Free Appointments:</strong> Visual booking board with real-time stylist availability locking.<br>
+        • <strong>Dual ESC/POS Thermal Printing:</strong> Native high-speed formatting for 58mm (2-inch) and 80mm (3-inch) receipt rolls.<br>
+        • <strong>Local Data Sovereignty:</strong> Complete data security with encrypted automated multi-destination database backups.
+    </div>
+
+    <h2>2. Complete End-to-End Module Workflows</h2>
+
+    <div class="workflow-card">
+        <div class="workflow-card-title"><span class="workflow-num">1</span> Smart Express POS & Multi-Tender Checkout</div>
+        <p><strong>Process Flow:</strong> Select/Search Customer (or Walk-in) $\rightarrow$ Add Services (Hair, Skin, Spa) + Scan Retail Products $\rightarrow$ Assign Stylist per line item $\rightarrow$ Apply Line or Overall Discount $\rightarrow$ Select Payment Mode (Cash, UPI/QR, Card, Split, or Customer Due) $\rightarrow$ 1-Click Save & Thermal Print with automatic cash drawer trigger.</p>
+    </div>
+
+    <div class="workflow-card">
+        <div class="workflow-card-title"><span class="workflow-num">2</span> Visual Appointment Calendar & 1-Click Bill Conversion</div>
+        <p><strong>Process Flow:</strong> Create Booking $\rightarrow$ System verifies stylist availability to eliminate double-booking $\rightarrow$ Monitor lifecycle on visual timeline (Scheduled $\rightarrow$ In-Progress $\rightarrow$ Completed) $\rightarrow$ Click <strong>Bill Now</strong> to auto-populate cart and checkout instantly.</p>
+    </div>
+
+    <div class="workflow-card">
+        <div class="workflow-card-title"><span class="workflow-num">3</span> Staff Roster, Attendance & Commission Calculation</div>
+        <p><strong>Process Flow:</strong> Configure staff master & default commission % $\rightarrow$ Staff daily check-in / check-out attendance $\rightarrow$ Real-time commission credit on each bill item $\rightarrow$ Generate monthly commission summaries for instant payroll disbursement.</p>
+    </div>
+
+    <div class="workflow-card">
+        <div class="workflow-card-title"><span class="workflow-num">4</span> Customer CRM, Outstanding Dues & Loyalty Rewards</div>
+        <p><strong>Process Flow:</strong> Central customer database with birthday/anniversary reminders $\rightarrow$ Earn loyalty points on billings $\rightarrow$ Redeem points during checkout $\rightarrow$ Track customer credit in Due Ledger with balance settlement receipts.</p>
+    </div>
+
+    <div class="workflow-card">
+        <div class="workflow-card-title"><span class="workflow-num">5</span> Inventory, Inward Purchases & Daily Stock Ledger</div>
+        <p><strong>Process Flow:</strong> Purchase entry with supplier invoice & batch details $\rightarrow$ Automatic stock increment $\rightarrow$ Outflow tracking for Retail Sales vs. In-Salon Back-Bar consumption $\rightarrow$ Real-time Daily Stock Ledger Book audit.</p>
+    </div>
+
+    <div class="workflow-card">
+        <div class="workflow-card-title"><span class="workflow-num">6</span> Day-End Cash Register Settlement (EOD Reconciliation)</div>
+        <p><strong>Process Flow:</strong> Record Morning Float $\rightarrow$ System auto-calculates Cash Sales + Digital Collections - Expenses $\rightarrow$ Cashier enters physical cash denomination count $\rightarrow$ System audits discrepancy (Over/Short) $\rightarrow$ Print official EOD summary handover slip.</p>
+    </div>
+
+    <div class="workflow-card">
+        <div class="workflow-card-title"><span class="workflow-num">7</span> Business Intelligence & Statutory Reporting (20+ Reports)</div>
+        <p><strong>Process Flow:</strong> Filter by date, staff, category, or payment mode $\rightarrow$ Real-time computation of Sales, Stylist Commissions, Stock Valuation, Profit Estimates, and GST/VAT B2C summaries $\rightarrow$ 1-Click Export to Excel, CSV, and PDF.</p>
+    </div>
+
+    <h2>3. User Acceptance Testing (UAT) & Deliverables Matrix</h2>
+    <table>
+        <tr>
+            <th style="width: 25%;">Module / Feature</th>
+            <th style="width: 55%;">Verification & Deliverable Details</th>
+            <th style="width: 20%; text-align: center;">UAT Status</th>
+        </tr>
+        <tr>
+            <td><strong>Express POS Billing</strong></td>
+            <td>Dual service & retail items, dynamic stylist split, barcode lookup, discounts, and split tenders.</td>
+            <td style="text-align: center;"><span class="status-badge">✔ VERIFIED & PASSED</span></td>
+        </tr>
+        <tr>
+            <td><strong>Thermal Printing</strong></td>
+            <td>58mm & 80mm ESC/POS thermal receipt formatting with salon logo, tax breakdown, and drawer kick.</td>
+            <td style="text-align: center;"><span class="status-badge">✔ VERIFIED & PASSED</span></td>
+        </tr>
+        <tr>
+            <td><strong>Appointment Board</strong></td>
+            <td>Interactive booking calendar, conflict clash prevention, stylist schedule board, 1-click billing.</td>
+            <td style="text-align: center;"><span class="status-badge">✔ VERIFIED & PASSED</span></td>
+        </tr>
+        <tr>
+            <td><strong>Staff & Commissions</strong></td>
+            <td>Service commission, retail incentive, staff attendance check-in/out, and payroll reporting.</td>
+            <td style="text-align: center;"><span class="status-badge">✔ VERIFIED & PASSED</span></td>
+        </tr>
+        <tr>
+            <td><strong>Stock & Inventory</strong></td>
+            <td>Purchase invoices, supplier master, back-bar usage logs, low stock alerts, and Daily Stock Ledger.</td>
+            <td style="text-align: center;"><span class="status-badge">✔ VERIFIED & PASSED</span></td>
+        </tr>
+        <tr>
+            <td><strong>Customer CRM & Dues</strong></td>
+            <td>Loyalty points engine, visit history, customer credit dues ledger, and payment settlement.</td>
+            <td style="text-align: center;"><span class="status-badge">✔ VERIFIED & PASSED</span></td>
+        </tr>
+        <tr>
+            <td><strong>EOD Cash Settlement</strong></td>
+            <td>Opening float, cash drawer reconciliation formula, cash variance audit, and printable summary.</td>
+            <td style="text-align: center;"><span class="status-badge">✔ VERIFIED & PASSED</span></td>
+        </tr>
+        <tr>
+            <td><strong>Database & Security</strong></td>
+            <td>Role-Based Access Control (Admin/Manager/Cashier/Staff), automated daily backups, 1-click restore.</td>
+            <td style="text-align: center;"><span class="status-badge">✔ VERIFIED & PASSED</span></td>
+        </tr>
+    </table>
+
+    <h2>4. Project Completion & Handover Sign-Off</h2>
+    <p>
+        This sign-off certificate confirms that the <strong>MeroDokan Saloon & Spa Management System (v2.6)</strong> has been completely installed, customized with salon branding, connected to local hardware peripherals, and validated via acceptance testing. Full operational control and user training have been delivered to the client.
+    </p>
+
+    <table class="sig-table">
+        <tr>
+            <th style="width: 50%;">Delivered By (Service Provider)</th>
+            <th style="width: 50%;">Accepted & Approved By (Client / Salon)</th>
+        </tr>
+        <tr>
+            <td>
+                <strong>Company:</strong> MeroDokan Software Solutions<br>
+                <strong>Lead Engineer:</strong> Solutions & Technical Lead<br>
+                <strong>Handover Date:</strong> September 1, 2026<br><br>
+                <strong>Signature:</strong> ____________________________________
+            </td>
+            <td>
+                <strong>Salon / Spa Name:</strong> ___________________________<br>
+                <strong>Authorized Signatory:</strong> _______________________<br>
+                <strong>Designation:</strong> Owner / General Manager<br><br>
+                <strong>Signature & Stamp:</strong> __________________________
+            </td>
+        </tr>
+    </table>
+
+    <h2>5. Annual Maintenance Contract (AMC) & Service Level Agreement</h2>
+
+    <div class="callout-gold">
+        <strong style="color: #92400e; font-size: 15px;">★ AMC INVESTMENT SCHEDULE: Rs. 4,500 /- per year (Applicable from Year 2)</strong><br>
+        • <strong>Year 1:</strong> 100% Complimentary (Included in software deployment package).<br>
+        • <strong>Year 2 Onwards:</strong> Rs. 4,500 / year for Primary Counter Node (Additional LAN Nodes at Rs. 1,500 / node / yr).
+    </div>
+
+    <h3>5.1 Scope of AMC Support (Inclusions)</h3>
+    <ul>
+        <li><strong>Unlimited Remote Support:</strong> Instant remote screen-share assistance (AnyDesk / TeamViewer) for software operations, cashier guidance, and troubleshooting.</li>
+        <li><strong>Software Patches & Updates:</strong> Complimentary release updates, performance optimization patches, and statutory tax modifications.</li>
+        <li><strong>Database Health & Optimization:</strong> SQL database index defragmentation, log shrinkage, and automated backup integrity audits.</li>
+        <li><strong>Disaster Recovery & Data Migration:</strong> Emergency data restoration in case of Windows OS crashes, hard drive failure, or PC replacement.</li>
+        <li><strong>Hardware Re-Calibration:</strong> Re-configuration of thermal receipt printers and barcode scanners after OS updates.</li>
+    </ul>
+
+    <h3>5.2 SLA Response Time Matrix</h3>
+    <table>
+        <tr>
+            <th>Priority Level</th>
+            <th>Impact Scenario</th>
+            <th>Response Time</th>
+            <th>Resolution Target</th>
+        </tr>
+        <tr>
+            <td><strong>P1 - Critical</strong></td>
+            <td>Billing counter completely down, database inaccessible</td>
+            <td><strong>&lt; 30 Minutes</strong></td>
+            <td><strong>&lt; 2 Hours</strong></td>
+        </tr>
+        <tr>
+            <td><strong>P2 - Medium</strong></td>
+            <td>Specific module issue (e.g. Appointment sync or Printer issue)</td>
+            <td><strong>&lt; 2 Hours</strong></td>
+            <td><strong>&lt; 6 Hours</strong></td>
+        </tr>
+        <tr>
+            <td><strong>P3 - Standard</strong></td>
+            <td>General questions, report formatting, new staff onboarding</td>
+            <td><strong>&lt; 4 Hours</strong></td>
+            <td><strong>&lt; 24 Hours</strong></td>
+        </tr>
+    </table>
+
+    <h2>6. Commercial Terms & Conditions</h2>
+    <ol>
+        <li><strong>Perpetual License:</strong> The client retains a lifetime perpetual license to utilize the installed software offline without recurring software lockouts.</li>
+        <li><strong>Data Ownership:</strong> 100% of customer data, billing logs, and financials remain the exclusive confidential property of the Client.</li>
+        <li><strong>Payment Terms:</strong> AMC fees are payable annually in advance. In the absence of an active AMC after Year 1, technical assistance is provided on a standard per-incident chargeable basis.</li>
+        <li><strong>Hardware Responsibility:</strong> The client shall maintain adequate power backup (UPS) and reliable hardware infrastructure for the counter computer.</li>
+    </ol>
+</div>
+
+</body>
+</html>

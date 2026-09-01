@@ -207,6 +207,7 @@ namespace MeroDokan
             btnPOS.Click += (s, e) => {
                 var billingCtrl = new SalesBillingControl();
                 billingCtrl.OnOpenAppointmentsRequested += () => btnAppointments.PerformClick();
+                billingCtrl.OnSaleCompleted += () => UpdateInvoiceFooter();
                 ShowView(billingCtrl, btnPOS, "Sale / Billing Terminal");
             };
             sidebarMenuPanel.Controls.Add(btnPOS);
@@ -223,6 +224,7 @@ namespace MeroDokan
                 apptCtrl.OnCheckoutRequested += (apptId, custId, serviceStaffPairs, saleId) => {
                     var billingCtrl = new SalesBillingControl();
                     billingCtrl.OnOpenAppointmentsRequested += () => btnAppointments.PerformClick();
+                    billingCtrl.OnSaleCompleted += () => UpdateInvoiceFooter();
                     ShowView(billingCtrl, btnPOS, "POS / Billing Terminal");
                     if (saleId > 0)
                     {
@@ -512,8 +514,15 @@ namespace MeroDokan
             clockTimer.Interval = 1000;
             clockTimer.Tick += (s, e) => {
                 lblClockFooter.Text = $"⏰ {DateTime.Now:hh:mm tt}";
+                if (DateTime.Now.Second == 0)
+                {
+                    UpdateInvoiceFooter();
+                }
             };
             clockTimer.Start();
+
+            // Initial footer invoice calculation
+            UpdateInvoiceFooter();
 
             // ==========================================
             // 4. MAIN CONTENT CONTAINER PANEL
@@ -530,6 +539,19 @@ namespace MeroDokan
             sidebarPanel.SendToBack();
             footerPanel.SendToBack();
             mainContentPanel.BringToFront();
+        }
+
+        public void UpdateInvoiceFooter()
+        {
+            try
+            {
+                if (lblInvoiceFooter != null && !lblInvoiceFooter.IsDisposed)
+                {
+                    string nextInv = SalesBillingControl.GetNextInvoiceNumberPreview(true);
+                    lblInvoiceFooter.Text = $"🧾 Invoice No : {nextInv}";
+                }
+            }
+            catch { }
         }
 
         private Button CreateSidebarNavButton(string text, int height)

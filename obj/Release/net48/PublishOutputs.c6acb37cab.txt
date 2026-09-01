@@ -1,0 +1,6 @@
+d:\Bhawani Works\Project All\MeroDokanSaloon\Mero-Dokan-Salon\publish\app_icon.ico
+d:\Bhawani Works\Project All\MeroDokanSaloon\Mero-Dokan-Salon\publish\MeroDokanSaloon.exe
+d:\Bhawani Works\Project All\MeroDokanSaloon\Mero-Dokan-Salon\publish\MeroDokanSaloon.exe.config
+d:\Bhawani Works\Project All\MeroDokanSaloon\Mero-Dokan-Salon\publish\MeroDokanSaloon.pdb
+d:\Bhawani Works\Project All\MeroDokanSaloon\Mero-Dokan-Salon\publish\QRCoder.dll
+d:\Bhawani Works\Project All\MeroDokanSaloon\Mero-Dokan-Salon\publish\System.Data.SqlClient.dll
