@@ -1123,7 +1123,8 @@ namespace MeroDokan
 
             string upiId = !string.IsNullOrWhiteSpace(salonUPIId) ? salonUPIId : "saloon@okhdfcbank";
             string payee = !string.IsNullOrWhiteSpace(salonUPIName) ? salonUPIName : salonShopName;
-            string tempInvRef = GetNextInvoiceNumberPreview(isGSTBillMode);
+            string invFlag = cartItems.Any(c => c.ItemType == "Service") ? "S" : "P";
+            string tempInvRef = GetNextInvoiceNumberPreview(invFlag);
 
             using (var qrDlg = new QRPaymentDialog(upiId, payee, grandTotal, tempInvRef))
             {
@@ -1686,6 +1687,12 @@ namespace MeroDokan
 
         private void AddServiceToCart(ServiceItemData srv)
         {
+            if (cartItems.Any(c => c.ItemType == "Product"))
+            {
+                MessageBox.Show("Separate Invoices Required:\n\nThis bill already contains Retail Products. Service and Product bills cannot be made in the same invoice.\n\nPlease complete the Product bill first or clear the cart before adding Salon Services.", "Separate Invoice Rule", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
             // Default Stylist
             int defStaffId = staffList.Count > 0 ? staffList[0].Id : 0;
             string defStaffName = staffList.Count > 0 ? staffList[0].Name : "-";
@@ -1720,6 +1727,12 @@ namespace MeroDokan
 
         private void AddProductToCart(ProductItemData prd)
         {
+            if (cartItems.Any(c => c.ItemType == "Service"))
+            {
+                MessageBox.Show("Separate Invoices Required:\n\nThis bill already contains Salon Services. Service and Product bills cannot be made in the same invoice.\n\nPlease complete the Service bill first or clear the cart before adding Retail Products.", "Separate Invoice Rule", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
             var existing = cartItems.Find(c => c.ItemType == "Product" && c.ItemId == prd.Id);
             int currentQty = existing != null ? existing.Quantity : 0;
 
@@ -1861,7 +1874,16 @@ namespace MeroDokan
         private void UpdateCartUI()
         {
             flowCartItems.Controls.Clear();
-            lblOrderItemsCount.Text = $"Order Items ( {cartItems.Count} )";
+            string billTypeTag = "";
+            if (cartItems.Any(c => c.ItemType == "Service"))
+            {
+                billTypeTag = " [Service Bill]";
+            }
+            else if (cartItems.Any(c => c.ItemType == "Product"))
+            {
+                billTypeTag = " [Product Bill]";
+            }
+            lblOrderItemsCount.Text = $"Order Items ( {cartItems.Count} ){billTypeTag}";
 
             foreach (var item in cartItems)
             {
@@ -2083,6 +2105,12 @@ namespace MeroDokan
 
         private void ShowAddExtraChargeDialog()
         {
+            if (cartItems.Any(c => c.ItemType == "Product"))
+            {
+                MessageBox.Show("Separate Invoices Required:\n\nThis bill already contains Retail Products. Service and Product bills cannot be made in the same invoice.\n\nPlease complete the Product bill first or clear the cart before adding Salon Service charges.", "Separate Invoice Rule", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
             using (Form dlg = new Form())
             {
                 dlg.Text = "Add Custom / Extra Service Charge";
@@ -2359,6 +2387,14 @@ namespace MeroDokan
                 return;
             }
 
+            bool hasServices = cartItems.Any(c => c.ItemType == "Service");
+            bool hasProducts = cartItems.Any(c => c.ItemType == "Product");
+            if (hasServices && hasProducts)
+            {
+                MessageBox.Show("Separate Invoices Required:\n\nServices and Products cannot be sold in the same invoice. Please remove either the products or services to generate separate bills.", "Separate Bills Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             RecalculateTotals();
 
             decimal subTotal = 0;
@@ -2445,7 +2481,7 @@ namespace MeroDokan
                                     cmdRestoreStock.ExecuteNonQuery();
                                 }
 
-                                // 2. Delete old details
+                                // 2. Delete existing line items
                                 using (SqlCommand cmdDel = new SqlCommand("DELETE FROM SaleDetails WHERE SaleId = @saleId", conn, trans))
                                 {
                                     cmdDel.Parameters.AddWithValue("@saleId", editingSaleId);
@@ -2453,7 +2489,7 @@ namespace MeroDokan
                                 }
 
                                 // 3. Update Sales Header in-place (preserving original InvoiceNumber & SaleDate)
-                                using (SqlCommand cmdUpdSale = new SqlCommand(@"
+                                using (SqlCommand cmd = new SqlCommand(@"
                                     UPDATE Sales SET
                                         CustomerId = @cust,
                                         SubTotal = @sub,
@@ -2475,28 +2511,28 @@ namespace MeroDokan
                                         OnlineAmount = @onlineAmt
                                     WHERE Id = @saleId", conn, trans))
                                 {
-                                    cmdUpdSale.Parameters.AddWithValue("@saleId", editingSaleId);
-                                    cmdUpdSale.Parameters.AddWithValue("@cust", currentCustomerId);
-                                    cmdUpdSale.Parameters.AddWithValue("@sub", subTotal);
-                                    cmdUpdSale.Parameters.AddWithValue("@disc", discountAmt);
-                                    cmdUpdSale.Parameters.AddWithValue("@tx", isGSTBillMode ? totalTax : 0.00m);
-                                    cmdUpdSale.Parameters.AddWithValue("@grand", grandTotal);
-                                    cmdUpdSale.Parameters.AddWithValue("@paid", grandTotal);
-                                    cmdUpdSale.Parameters.AddWithValue("@payMode", selectedPaymentMethod);
-                                    cmdUpdSale.Parameters.AddWithValue("@isGst", isGSTBillMode);
-                                    cmdUpdSale.Parameters.AddWithValue("@taxable", totalTaxable);
-                                    cmdUpdSale.Parameters.AddWithValue("@cgst", isGSTBillMode ? totalCGST : 0.00m);
-                                    cmdUpdSale.Parameters.AddWithValue("@sgst", isGSTBillMode ? totalSGST : 0.00m);
-                                    cmdUpdSale.Parameters.AddWithValue("@igst", isGSTBillMode ? totalIGST : 0.00m);
-                                    cmdUpdSale.Parameters.AddWithValue("@custGst", string.IsNullOrEmpty(currentCustomerGSTIN) ? DBNull.Value : (object)currentCustomerGSTIN);
-                                    cmdUpdSale.Parameters.AddWithValue("@pos", currentCustomerStateName);
-                                    cmdUpdSale.Parameters.AddWithValue("@isInter", isInterState);
-                                    cmdUpdSale.Parameters.AddWithValue("@cashAmt", cashPortion);
-                                    cmdUpdSale.Parameters.AddWithValue("@onlineAmt", onlinePortion);
-                                    cmdUpdSale.ExecuteNonQuery();
+                                    cmd.Parameters.AddWithValue("@saleId", editingSaleId);
+                                    cmd.Parameters.AddWithValue("@cust", currentCustomerId);
+                                    cmd.Parameters.AddWithValue("@sub", subTotal);
+                                    cmd.Parameters.AddWithValue("@disc", discountAmt);
+                                    cmd.Parameters.AddWithValue("@tx", isGSTBillMode ? totalTax : 0.00m);
+                                    cmd.Parameters.AddWithValue("@grand", grandTotal);
+                                    cmd.Parameters.AddWithValue("@paid", grandTotal);
+                                    cmd.Parameters.AddWithValue("@payMode", selectedPaymentMethod);
+                                    cmd.Parameters.AddWithValue("@isGst", isGSTBillMode);
+                                    cmd.Parameters.AddWithValue("@taxable", totalTaxable);
+                                    cmd.Parameters.AddWithValue("@cgst", isGSTBillMode ? totalCGST : 0.00m);
+                                    cmd.Parameters.AddWithValue("@sgst", isGSTBillMode ? totalSGST : 0.00m);
+                                    cmd.Parameters.AddWithValue("@igst", isGSTBillMode ? totalIGST : 0.00m);
+                                    cmd.Parameters.AddWithValue("@custGst", string.IsNullOrEmpty(currentCustomerGSTIN) ? DBNull.Value : (object)currentCustomerGSTIN);
+                                    cmd.Parameters.AddWithValue("@pos", currentCustomerStateName);
+                                    cmd.Parameters.AddWithValue("@isInter", isInterState);
+                                    cmd.Parameters.AddWithValue("@cashAmt", cashPortion);
+                                    cmd.Parameters.AddWithValue("@onlineAmt", onlinePortion);
+                                    cmd.ExecuteNonQuery();
                                 }
 
-                                // 4. Insert updated SaleDetails
+                                // 4. Insert Updated Sale Details
                                 foreach (var item in cartItems)
                                 {
                                     if (item.ItemType == "Service")
@@ -2554,6 +2590,7 @@ namespace MeroDokan
                                             cmd.ExecuteNonQuery();
                                         }
 
+                                        // Deduct Stock for new updated quantity
                                         using (SqlCommand cmd = new SqlCommand("UPDATE Products SET Stock = Stock - @qty WHERE Id = @prodId", conn, trans))
                                         {
                                             cmd.Parameters.AddWithValue("@qty", item.Quantity);
@@ -2567,46 +2604,30 @@ namespace MeroDokan
                                 {
                                     try
                                     {
-                                        int primaryStaffId = 0;
-                                        var srvIdsList = new System.Collections.Generic.List<int>();
-                                        var srvNamesList = new System.Collections.Generic.List<string>();
-                                        var srvStaffIdsList = new System.Collections.Generic.List<string>();
-
-                                        foreach (var item in cartItems)
+                                        int primaryStylistId = 0;
+                                        foreach (var itm in cartItems)
                                         {
-                                            if (item.ItemType == "Service")
+                                            if (itm.ItemType == "Service" && itm.StaffId > 0)
                                             {
-                                                if (primaryStaffId == 0 && item.StaffId > 0) primaryStaffId = item.StaffId;
-                                                srvIdsList.Add(item.ItemId);
-                                                srvNamesList.Add($"{item.Name}" + (!string.IsNullOrEmpty(item.StaffName) ? $" ({item.StaffName})" : ""));
-                                                srvStaffIdsList.Add($"{item.ItemId}:{item.StaffId}");
+                                                primaryStylistId = itm.StaffId;
+                                                break;
                                             }
                                         }
 
-                                        string srvIdsStr = string.Join(",", srvIdsList);
-                                        string srvNamesStr = string.Join(" ➜ ", srvNamesList);
-                                        string srvStaffIdsStr = string.Join(",", srvStaffIdsList);
-
                                         using (SqlCommand cmdAppt = new SqlCommand(@"
                                             UPDATE Appointments SET 
-                                                Status = 'Billed', 
-                                                SaleId = @saleId,
-                                                CustomerId = @cust,
+                                                CustomerId = @cId, 
                                                 StaffId = CASE WHEN @stId > 0 THEN @stId ELSE StaffId END,
-                                                ServiceIds = CASE WHEN LEN(@sIds) > 0 THEN @sIds ELSE ServiceIds END,
-                                                ServiceNames = CASE WHEN LEN(@sNames) > 0 THEN @sNames ELSE ServiceNames END,
-                                                ServiceStaffIds = CASE WHEN LEN(@sStaffIds) > 0 THEN @sStaffIds ELSE ServiceStaffIds END
+                                                Status = 'Billed', 
+                                                UpdatedDate = GETDATE()
                                             WHERE Id = @apptId", conn, trans))
                                         {
-                                            cmdAppt.Parameters.AddWithValue("@saleId", editingSaleId);
-                                            cmdAppt.Parameters.AddWithValue("@cust", currentCustomerId);
-                                            cmdAppt.Parameters.AddWithValue("@stId", primaryStaffId);
-                                            cmdAppt.Parameters.AddWithValue("@sIds", srvIdsStr);
-                                            cmdAppt.Parameters.AddWithValue("@sNames", srvNamesStr);
-                                            cmdAppt.Parameters.AddWithValue("@sStaffIds", srvStaffIdsStr);
+                                            cmdAppt.Parameters.AddWithValue("@cId", currentCustomerId);
+                                            cmdAppt.Parameters.AddWithValue("@stId", primaryStylistId > 0 ? (object)primaryStylistId : DBNull.Value);
                                             cmdAppt.Parameters.AddWithValue("@apptId", currentAppointmentId);
                                             cmdAppt.ExecuteNonQuery();
                                         }
+
                                         using (SqlCommand cmdSalesAppt = new SqlCommand("UPDATE Sales SET AppointmentId = @apptId WHERE Id = @saleId", conn, trans))
                                         {
                                             cmdSalesAppt.Parameters.AddWithValue("@apptId", currentAppointmentId);
@@ -2641,7 +2662,8 @@ namespace MeroDokan
                                 // ==============================================================
                                 // NEW SALE INVOICE CREATION
                                 // ==============================================================
-                                string invoiceNum = GenerateNextInvoiceNumber(conn, trans, isGSTBillMode);
+                                string flag = hasServices ? "S" : "P";
+                                string invoiceNum = GenerateNextInvoiceNumber(conn, trans, flag);
 
                                 // 1. Sales Header
                                 int newSaleId = 0;
@@ -2858,29 +2880,42 @@ namespace MeroDokan
             }
         }
 
-        public static string GenerateNextInvoiceNumber(SqlConnection conn, SqlTransaction trans, bool isGST)
+        public static string GetFinancialYear(DateTime dt)
         {
-            string datePart = DateTime.Now.ToString("yyMMdd");
-            string prefix = (isGST ? "INV-" : "RCP-") + datePart + "-";
+            int startYear = (dt.Month >= 4) ? dt.Year : dt.Year - 1;
+            int endYear = startYear + 1;
+            return $"{startYear % 100:D2}-{endYear % 100:D2}";
+        }
+
+        public static string GenerateNextInvoiceNumber(SqlConnection conn, SqlTransaction trans, string flag = "P", DateTime? saleDate = null)
+        {
+            DateTime dt = saleDate ?? DateTime.Now;
+            string dayPart = dt.ToString("dd");
+            string fy = GetFinancialYear(dt);
+            string flagCode = (!string.IsNullOrWhiteSpace(flag) && flag.Trim().ToUpper().StartsWith("S")) ? "S" : "P";
+
             int maxSerial = 0;
 
             try
             {
                 using (SqlCommand cmd = new SqlCommand("SELECT InvoiceNumber FROM Sales WHERE InvoiceNumber LIKE @pattern", conn, trans))
                 {
-                    cmd.Parameters.AddWithValue("@pattern", prefix + "%");
+                    cmd.Parameters.AddWithValue("@pattern", $"%/{flagCode}/{fy}");
                     using (SqlDataReader rdr = cmd.ExecuteReader())
                     {
                         while (rdr.Read())
                         {
                             string inv = rdr[0]?.ToString() ?? "";
-                            if (inv.StartsWith(prefix))
+                            string[] parts = inv.Split('/');
+                            if (parts.Length == 4)
                             {
-                                string suffix = inv.Substring(prefix.Length);
-                                // Check for sequential serials (len <= 5 to exclude 6-digit HHmmss timestamps)
-                                if (suffix.Length <= 5 && int.TryParse(suffix, out int parsedNum))
+                                if (string.Equals(parts[2].Trim(), flagCode, StringComparison.OrdinalIgnoreCase) &&
+                                    string.Equals(parts[3].Trim(), fy, StringComparison.OrdinalIgnoreCase))
                                 {
-                                    if (parsedNum > maxSerial) maxSerial = parsedNum;
+                                    if (int.TryParse(parts[1].Trim(), out int parsedNum))
+                                    {
+                                        if (parsedNum > maxSerial) maxSerial = parsedNum;
+                                    }
                                 }
                             }
                         }
@@ -2890,23 +2925,37 @@ namespace MeroDokan
             catch { }
 
             int nextSerial = maxSerial + 1;
-            return $"{prefix}{nextSerial:D4}";
+            return $"{dayPart}/{nextSerial:D3}/{flagCode}/{fy}";
         }
 
-        public static string GetNextInvoiceNumberPreview(bool isGST = true)
+        public static string GenerateNextInvoiceNumber(SqlConnection conn, SqlTransaction trans, bool isGST)
+        {
+            return GenerateNextInvoiceNumber(conn, trans, "P");
+        }
+
+        public static string GetNextInvoiceNumberPreview(string flag = "P")
         {
             try
             {
                 using (SqlConnection conn = new SqlConnection(DatabaseHelper.ConnectionString))
                 {
                     conn.Open();
-                    return GenerateNextInvoiceNumber(conn, null, isGST);
+                    return GenerateNextInvoiceNumber(conn, null, flag);
                 }
             }
             catch
             {
-                return $"{(isGST ? "INV-" : "RCP-")}{DateTime.Now:yyMMdd}-0001";
+                DateTime dt = DateTime.Now;
+                string dayPart = dt.ToString("dd");
+                string fy = GetFinancialYear(dt);
+                string flagCode = (!string.IsNullOrWhiteSpace(flag) && flag.Trim().ToUpper().StartsWith("S")) ? "S" : "P";
+                return $"{dayPart}/001/{flagCode}/{fy}";
             }
+        }
+
+        public static string GetNextInvoiceNumberPreview(bool isGST = true)
+        {
+            return GetNextInvoiceNumberPreview("P");
         }
 
         public void LoadInvoiceForAdjustment(int saleId, int apptId = 0)
@@ -3239,6 +3288,7 @@ namespace MeroDokan
         public void PreFillServiceCheckout(int apptId, int customerId, System.Collections.Generic.List<Tuple<int, int>> serviceStaffPairs)
         {
             currentAppointmentId = apptId;
+            cartItems.Clear();
 
             // Lookup Customer
             try
@@ -3966,6 +4016,12 @@ namespace MeroDokan
 
         private void BtnAddCustomItem_Click(object sender, EventArgs e)
         {
+            if (cartItems.Any(c => c.ItemType == "Service"))
+            {
+                MessageBox.Show("Separate Invoices Required:\n\nThis bill already contains Salon Services. Service and Product bills cannot be made in the same invoice.\n\nPlease complete the Service bill first or clear the cart before adding Retail Products.", "Separate Invoice Rule", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
             string itemName = Microsoft.VisualBasic.Interaction.InputBox("Enter Custom Retail Product Name:", "Add Custom Product", "Custom Retail Item");
             if (string.IsNullOrEmpty(itemName)) return;
             string itemPriceStr = Microsoft.VisualBasic.Interaction.InputBox("Enter Product Rate / Price (Rs.):", "Product Price", "500");

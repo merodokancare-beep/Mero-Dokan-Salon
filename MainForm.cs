@@ -547,8 +547,9 @@ namespace MeroDokan
             {
                 if (lblInvoiceFooter != null && !lblInvoiceFooter.IsDisposed)
                 {
-                    string nextInv = SalesBillingControl.GetNextInvoiceNumberPreview(true);
-                    lblInvoiceFooter.Text = $"🧾 Invoice No : {nextInv}";
+                    string nextProd = SalesBillingControl.GetNextInvoiceNumberPreview("P");
+                    string nextSrv = SalesBillingControl.GetNextInvoiceNumberPreview("S");
+                    lblInvoiceFooter.Text = $"🧾 Next Inv: Product [{nextProd}] | Service [{nextSrv}]";
                 }
             }
             catch { }
